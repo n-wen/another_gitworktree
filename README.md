@@ -72,9 +72,7 @@ cd another_gitworktree
 2. 切换到 "Worktree" tab
 3. 查看所有 worktree 的详细信息
 
-**注意**：如果关闭了 Worktree tab，可以通过以下方式重新打开：
-- 方式一：菜单栏 View → Tool Windows → Git Worktree
-- 方式二：使用 Find Action（Ctrl+Shift+A / Cmd+Shift+A），搜索 "Git Worktree"
+**注意**：Worktree tab 是不可关闭的，确保你始终可以访问它
 
 ### 创建 Worktree
 1. 点击顶部的"创建 Worktree"按钮

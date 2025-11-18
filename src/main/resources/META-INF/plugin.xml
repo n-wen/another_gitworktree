@@ -27,8 +27,9 @@
     <extensions defaultExtensionNs="com.intellij">
     </extensions>
 
+    <!-- 暂时移除 actions，因为 tab 设置为不可关闭，不需要重新打开功能 -->
+    <!--
     <actions>
-        <!-- 添加到 View 菜单的 Tool Windows 子菜单 -->
         <action id="io.github.nwen.another_gitworktree.OpenWorktreeTab"
                 class="io.github.nwen.another_gitworktree.OpenWorktreeTabAction"
                 text="Git Worktree"
@@ -37,6 +38,7 @@
             <add-to-group group-id="ToolWindowsGroup" anchor="last"/>
         </action>
     </actions>
+    -->
 
     <projectListeners>
         <listener class="io.github.nwen.another_gitworktree.WorktreeTabInstaller"

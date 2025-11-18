@@ -93,6 +93,8 @@ class WorktreeTabInstaller : ProjectManagerListener {
                 val worktreePanel = WorktreePanel(project)
                 worktreePanels[project] = worktreePanel
                 val content = contentFactory.createContent(worktreePanel, "Worktree", false)
+                // 设置 tab 不可关闭，避免关闭后无法重新打开的问题
+                content.isCloseable = false
                 
                 toolWindow.contentManager.addContent(content)
                 thisLogger().info("Worktree tab added successfully to $toolWindowId!")
