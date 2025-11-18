@@ -23,7 +23,16 @@ jobs:
       uses: gradle/gradle-build-action@v3
       
     - name: Build Plugin
-      run: ./gradlew buildPlugin
+      run: |
+        # Retry build up to 3 times to handle transient network issues
+        for i in 1 2 3; do
+          if ./gradlew buildPlugin --no-configuration-cache; then
+            exit 0
+          fi
+          echo "Build attempt $i failed, retrying..."
+          sleep 5
+        done
+        exit 1
       
     - name: Extract version from tag
       id: get_version
