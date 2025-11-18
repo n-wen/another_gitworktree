@@ -5,11 +5,11 @@
 ## ✅ 发布前必做
 
 ### 1. 更新个人信息
-- [ ] 替换 `plugin.xml` 中的 `your.email@example.com` 为你的邮箱
-- [ ] 替换 `plugin.xml` 中的 `Your Name` 为你的名字
-- [ ] 替换 `plugin.xml` 中的 `yourusername` 为你的 GitHub 用户名
-- [ ] 更新 README.md 和 README.zh-CN.md 中的 `yourusername`
-- [ ] 更新 README.md 和 README.zh-CN.md 中的 `your.email@example.com`
+- [x] 替换 `plugin.xml` 中的 `your.email@example.com` 为你的邮箱 ✅
+- [x] 替换 `plugin.xml` 中的 `Your Name` 为你的名字 ✅
+- [x] 替换 `plugin.xml` 中的 `yourusername` 为你的 GitHub 用户名 ✅
+- [x] 更新 README.md 和 README.zh-CN.md 中的 `yourusername` ✅
+- [x] 更新 README.md 和 README.zh-CN.md 中的 `your.email@example.com` ✅
 
 ### 2. 准备截图
 - [ ] 创建 `docs/screenshots/` 目录
@@ -68,9 +68,9 @@ License: MIT
 
 ### Links
 ```
-Website: https://github.com/yourusername/another_gitworktree
-Source Code: https://github.com/yourusername/another_gitworktree
-Issue Tracker: https://github.com/yourusername/another_gitworktree/issues
+Website: https://github.com/n-wen/another_gitworktree
+Source Code: https://github.com/n-wen/another_gitworktree
+Issue Tracker: https://github.com/n-wen/another_gitworktree/issues
 ```
 
 ### Tags
@@ -106,7 +106,7 @@ Visual Git worktree management for IntelliJ IDEA. Create, delete, and manage wor
 
 - 查看详细指南：[MARKETPLACE_GUIDE.md](../MARKETPLACE_GUIDE.md)
 - JetBrains 官方文档：https://plugins.jetbrains.com/docs/marketplace/
-- 提交 Issue：https://github.com/yourusername/another_gitworktree/issues
+- 提交 Issue：https://github.com/n-wen/another_gitworktree/issues
 
 ---
 

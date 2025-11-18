@@ -39,10 +39,10 @@
   - [ ] 分支选择对话框截图
   - [ ] 右键菜单截图
 - [ ] 录制演示 GIF/视频
-- [ ] 更新 README 中的占位符：
-  - [ ] 替换 `yourusername` 为实际 GitHub 用户名
-  - [ ] 替换 `your.email@example.com` 为实际联系邮箱
-  - [ ] 替换 `YourCompany` 为实际信息
+- [x] 更新 README 中的占位符：✅
+  - [x] 替换 `yourusername` 为实际 GitHub 用户名 (n-wen)
+  - [x] 替换 `your.email@example.com` 为实际联系邮箱 (n-wen@outlook.com)
+  - [x] 替换 `YourCompany` 为实际信息 (wenning)
 - [ ] 添加更多使用示例和场景说明
 
 ### 插件配置

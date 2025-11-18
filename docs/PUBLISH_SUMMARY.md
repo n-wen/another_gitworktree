@@ -27,27 +27,18 @@
 
 在以下文件中替换占位符：
 
-#### `plugin.xml`
-```xml
-<vendor email="你的邮箱" url="https://github.com/你的用户名">你的名字</vendor>
-```
+#### ✅ 个人信息已更新
 
-#### `README.md` 和 `README.zh-CN.md`
-- 将所有 `yourusername` 替换为你的 GitHub 用户名
-- 将 `your.email@example.com` 替换为你的邮箱
+所有文件中的个人信息已更新为：
+- **GitHub 用户名**: n-wen
+- **邮箱**: n-wen@outlook.com
+- **名字**: wenning
 
-一键替换命令（Windows Git Bash / Linux / Mac）：
-```bash
-# 设置你的信息
-YOUR_NAME="Your Name"
-YOUR_EMAIL="your.email@example.com"
-YOUR_GITHUB="yourusername"
-
-# 批量替换（先备份！）
-find . -type f -name "*.md" -o -name "*.xml" | xargs sed -i "s/yourusername/$YOUR_GITHUB/g"
-find . -type f -name "*.md" -o -name "*.xml" | xargs sed -i "s/your.email@example.com/$YOUR_EMAIL/g"
-find . -type f -name "*.xml" | xargs sed -i "s/Your Name/$YOUR_NAME/g"
-```
+已更新的文件：
+- ✅ `plugin.xml`
+- ✅ `README.md`
+- ✅ `README.zh-CN.md`
+- ✅ 所有文档文件
 
 ### 步骤 2：准备截图（30 分钟）
 
@@ -105,9 +96,9 @@ find . -type f -name "*.xml" | xargs sed -i "s/Your Name/$YOUR_NAME/g"
 | Category | Version Control Systems |
 | License | MIT |
 | Tags | git, worktree, version control, productivity, workflow |
-| Website | https://github.com/你的用户名/another_gitworktree |
-| Source Code | 同上 |
-| Issue Tracker | https://github.com/你的用户名/another_gitworktree/issues |
+| Website | https://github.com/n-wen/another_gitworktree |
+| Source Code | https://github.com/n-wen/another_gitworktree |
+| Issue Tracker | https://github.com/n-wen/another_gitworktree/issues |
 
 ### 插件描述（已在 plugin.xml 中）
 
@@ -161,7 +152,7 @@ https://plugins.jetbrains.com/plugin/[ID]/another-git-worktree
 - **详细指南**: 查看 [MARKETPLACE_GUIDE.md](../MARKETPLACE_GUIDE.md)
 - **官方文档**: https://plugins.jetbrains.com/docs/marketplace/
 - **社区支持**: https://plugins.jetbrains.com/slack
-- **问题反馈**: 在 GitHub Issues 中提问
+- **问题反馈**: 在 [GitHub Issues](https://github.com/n-wen/another_gitworktree/issues) 中提问
 
 ## 🎉 准备好了吗？
 

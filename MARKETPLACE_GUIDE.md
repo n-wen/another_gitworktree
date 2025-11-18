@@ -16,7 +16,7 @@
     <name>Another Git Worktree</name>
     
     <!-- 供应商信息 -->
-    <vendor email="your.email@example.com" url="https://github.com/yourusername">Your Name</vendor>
+    <vendor email="n-wen@outlook.com" url="https://github.com/n-wen">wenning</vendor>
     
     <!-- 插件描述（支持 HTML，显示在插件详情页） -->
     <description><![CDATA[
@@ -40,7 +40,7 @@
             <li>Manage your Git worktrees visually</li>
         </ol>
         
-        <p>For more information, visit the <a href="https://github.com/yourusername/another_gitworktree">GitHub repository</a>.</p>
+        <p>For more information, visit the <a href="https://github.com/n-wen/another_gitworktree">GitHub repository</a>.</p>
     ]]></description>
     
     <!-- 更新说明（每次更新时填写） -->
@@ -167,9 +167,9 @@ Perfect for developers who work with multiple branches simultaneously!
 
 #### Documentation（文档）
 
-- **Website**: `https://github.com/yourusername/another_gitworktree`
-- **Source Code**: `https://github.com/yourusername/another_gitworktree`
-- **Issue Tracker**: `https://github.com/yourusername/another_gitworktree/issues`
+- **Website**: `https://github.com/n-wen/another_gitworktree`
+- **Source Code**: `https://github.com/n-wen/another_gitworktree`
+- **Issue Tracker**: `https://github.com/n-wen/another_gitworktree/issues`
 
 #### Screenshots（截图）
 
@@ -396,5 +396,5 @@ A: 如果插件收费，JetBrains 支持信用卡、PayPal 等。收入按月结
 **需要帮助？**
 - 查看 [官方文档](https://plugins.jetbrains.com/docs/marketplace/)
 - 加入 [Slack 社区](https://plugins.jetbrains.com/slack)
-- 提交 [GitHub Issue](https://github.com/yourusername/another_gitworktree/issues)
+- 提交 [GitHub Issue](https://github.com/n-wen/another_gitworktree/issues)
 

@@ -53,7 +53,7 @@
 
 1. 克隆仓库：
 ```bash
-git clone https://github.com/yourusername/another_gitworktree.git
+git clone https://github.com/n-wen/another_gitworktree.git
 cd another_gitworktree
 ```
 
@@ -186,8 +186,8 @@ A: 可以，在分支选择对话框中输入完整的远程分支名（如 `ori
 ## 反馈与支持
 
 如有问题或建议，请：
-- 提交 [Issue](https://github.com/yourusername/another_gitworktree/issues)
-- 发送邮件至：your.email@example.com
+- 提交 [Issue](https://github.com/n-wen/another_gitworktree/issues)
+- 发送邮件至：n-wen@outlook.com
 
 ## 致谢
 

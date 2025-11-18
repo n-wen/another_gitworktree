@@ -55,7 +55,7 @@ A Git Worktree management plugin for IntelliJ IDEA that provides a visual interf
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/another_gitworktree.git
+git clone https://github.com/n-wen/another_gitworktree.git
 cd another_gitworktree
 ```
 
@@ -200,8 +200,8 @@ A: Yes, enter the full remote branch name in the branch selection dialog (e.g., 
 ## Feedback & Support
 
 For questions or suggestions:
-- Submit an [Issue](https://github.com/yourusername/another_gitworktree/issues)
-- Email: your.email@example.com
+- Submit an [Issue](https://github.com/n-wen/another_gitworktree/issues)
+- Email: n-wen@outlook.com
 
 ## Acknowledgments
 
@@ -209,4 +209,4 @@ Thanks to JetBrains for providing the powerful IntelliJ Platform SDK!
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/another_gitworktree&type=Date)](https://star-history.com/#yourusername/another_gitworktree&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=n-wen/another_gitworktree&type=Date)](https://star-history.com/#n-wen/another_gitworktree&Date)
