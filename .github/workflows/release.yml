@@ -8,6 +8,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create releases and upload artifacts
     
     steps:
     - name: Checkout code
@@ -40,10 +42,26 @@ jobs:
         VERSION=${GITHUB_REF#refs/tags/v}
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Plugin version: $VERSION"
+        echo "Tag name: ${GITHUB_REF#refs/tags/}"
+      
+    - name: Verify build artifacts
+      run: |
+        if [ ! -d "build/distributions" ]; then
+          echo "Error: build/distributions directory not found"
+          exit 1
+        fi
+        ZIP_COUNT=$(ls -1 build/distributions/*.zip 2>/dev/null | wc -l)
+        if [ "$ZIP_COUNT" -eq 0 ]; then
+          echo "Error: No zip files found in build/distributions"
+          exit 1
+        fi
+        echo "Found $ZIP_COUNT zip file(s):"
+        ls -lh build/distributions/*.zip
       
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
+        tag_name: ${{ github.ref_name }}
         files: |
           build/distributions/*.zip
         name: v${{ steps.get_version.outputs.version }}
