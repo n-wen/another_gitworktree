@@ -27,6 +27,17 @@
     <extensions defaultExtensionNs="com.intellij">
     </extensions>
 
+    <actions>
+        <!-- 添加到 View 菜单的 Tool Windows 子菜单 -->
+        <action id="io.github.nwen.another_gitworktree.OpenWorktreeTab"
+                class="io.github.nwen.another_gitworktree.OpenWorktreeTabAction"
+                text="Git Worktree"
+                description="打开 Git Worktree 面板"
+                icon="AllIcons.Vcs.Branch">
+            <add-to-group group-id="ToolWindowsGroup" anchor="last"/>
+        </action>
+    </actions>
+
     <projectListeners>
         <listener class="io.github.nwen.another_gitworktree.WorktreeTabInstaller"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>

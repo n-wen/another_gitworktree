@@ -17,6 +17,10 @@ class WorktreeTabInstaller : ProjectManagerListener {
         fun getWorktreePanel(project: Project): WorktreePanel? {
             return worktreePanels[project]
         }
+        
+        fun setWorktreePanel(project: Project, panel: WorktreePanel) {
+            worktreePanels[project] = panel
+        }
     }
     
     override fun projectOpened(project: Project) {
