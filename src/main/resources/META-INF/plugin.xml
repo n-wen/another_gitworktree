@@ -5,17 +5,59 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>Another_gitworktree</name>
+    <name>Another Git Worktree</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
+    <vendor email="your.email@example.com" url="https://github.com/yourusername">Your Name</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
-        Enter short description for your plugin here.<br>
-        <em>most HTML tags may be used</em>
+        <h1>Another Git Worktree</h1>
+        <p>A visual Git worktree management plugin for IntelliJ IDEA that helps you manage multiple working trees efficiently.</p>
+        
+        <h2>Features</h2>
+        <ul>
+            <li><b>Worktree List Display</b>: View all worktrees with path, branch name, commit hash, and status in a clean table interface</li>
+            <li><b>Double-Click to Open</b>: Instantly open worktree directories in IDEA with smart duplicate detection</li>
+            <li><b>Create Worktree</b>: Easy creation with branch selection dialog featuring real-time search and filtering</li>
+            <li><b>Delete Worktree</b>: Safe deletion with confirmation dialogs, accessible via toolbar or context menu</li>
+            <li><b>Branch Search</b>: Case-insensitive filtering for quick branch selection</li>
+            <li><b>Smart Detection</b>: Automatically switches to already open projects instead of creating duplicates</li>
+            <li><b>Context Menu</b>: Right-click support for quick access to all operations</li>
+        </ul>
+        
+        <h2>How to Use</h2>
+        <ol>
+            <li>Open Version Control tool window (Alt+9 or View → Tool Windows → Version Control)</li>
+            <li>Switch to the "Worktree" tab</li>
+            <li>Manage your Git worktrees with intuitive visual interface</li>
+        </ol>
+        
+        <h2>Perfect For</h2>
+        <p>Developers who work with multiple branches simultaneously, need to switch between feature branches quickly, 
+        or maintain separate working directories for different tasks.</p>
+        
+        <p>For more information, documentation, and source code, visit the 
+        <a href="https://github.com/yourusername/another_gitworktree">GitHub repository</a>.</p>
     ]]></description>
+    
+    <!-- Change notes displayed in the IDE and on the plugin page -->
+    <change-notes><![CDATA[
+        <h2>Version 1.0.0</h2>
+        <ul>
+            <li><b>Initial Release</b></li>
+            <li>✨ Worktree list display with detailed information (path, branch, commit, status)</li>
+            <li>✨ Double-click to open worktree directories in IDEA</li>
+            <li>✨ Create worktree with branch selection and smart path suggestions</li>
+            <li>✨ Delete worktree with confirmation dialogs</li>
+            <li>✨ Real-time branch search and filtering</li>
+            <li>✨ Context menu support for quick operations</li>
+            <li>✨ Smart project detection to avoid duplicate windows</li>
+            <li>🐛 Thread-safe operations (EDT and background threads)</li>
+            <li>🎨 Clean and intuitive user interface</li>
+        </ul>
+    ]]></change-notes>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
