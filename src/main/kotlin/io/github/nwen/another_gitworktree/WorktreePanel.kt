@@ -242,85 +242,91 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     }
     
     private fun openWorktreeDirectory(worktree: WorktreeInfo) {
-        try {
-            val worktreePath = worktree.path
-            val worktreeFile = java.io.File(worktreePath)
-            
-            if (!worktreeFile.exists()) {
-                Messages.showErrorDialog(
-                    project,
-                    "目录不存在: $worktreePath",
-                    "打开 Worktree 失败"
-                )
-                return
-            }
-            
-            if (!worktreeFile.isDirectory) {
-                Messages.showErrorDialog(
-                    project,
-                    "路径不是目录: $worktreePath",
-                    "打开 Worktree 失败"
-                )
-                return
-            }
-            
-            // 规范化路径，确保路径比较的准确性
-            val normalizedPath = worktreeFile.canonicalPath ?: worktreePath
-            
-            // 在 IDEA 中打开目录作为项目
-            ApplicationManager.getApplication().invokeLater {
-                val projectDir = java.io.File(worktreePath)
+        val worktreePath = worktree.path
+        
+        // 在后台线程执行文件系统操作，然后在 EDT 上执行 UI 操作
+        ApplicationManager.getApplication().executeOnPooledThread {
+            try {
+                val worktreeFile = java.io.File(worktreePath)
                 
-                if (!projectDir.exists() || !projectDir.isDirectory) {
-                    Messages.showErrorDialog(
-                        project,
-                        "目录不存在或不是有效目录: $worktreePath",
-                        "打开 Worktree 失败"
-                    )
-                    return@invokeLater
+                if (!worktreeFile.exists()) {
+                    ApplicationManager.getApplication().invokeLater {
+                        Messages.showErrorDialog(
+                            project,
+                            "目录不存在: $worktreePath",
+                            "打开 Worktree 失败"
+                        )
+                    }
+                    return@executeOnPooledThread
                 }
                 
-                try {
-                    // 检查项目是否已经打开
+                if (!worktreeFile.isDirectory) {
+                    ApplicationManager.getApplication().invokeLater {
+                        Messages.showErrorDialog(
+                            project,
+                            "路径不是目录: $worktreePath",
+                            "打开 Worktree 失败"
+                        )
+                    }
+                    return@executeOnPooledThread
+                }
+                
+                // 规范化路径，确保路径比较的准确性（在后台线程执行）
+                val normalizedPath = worktreeFile.canonicalPath ?: worktreePath
+                
+                // 在后台线程检查项目是否已经打开（避免在 EDT 上执行文件系统操作）
+                val existingProject = try {
                     val projectManager = ProjectManager.getInstance()
                     val openProjects = projectManager.openProjects
                     
                     // 查找是否已经有项目打开在相同的目录
-                    val existingProject = openProjects.firstOrNull { openProject ->
+                    openProjects.firstOrNull { openProject ->
                         val openProjectBasePath = openProject.basePath
                         if (openProjectBasePath != null) {
-                            val openProjectFile = java.io.File(openProjectBasePath)
-                            val openProjectNormalizedPath = openProjectFile.canonicalPath
-                            openProjectNormalizedPath == normalizedPath
+                            try {
+                                val openProjectFile = java.io.File(openProjectBasePath)
+                                val openProjectNormalizedPath = openProjectFile.canonicalPath
+                                openProjectNormalizedPath == normalizedPath
+                            } catch (e: Exception) {
+                                false
+                            }
                         } else {
                             false
                         }
                     }
-                    
-                    if (existingProject != null) {
-                        // 项目已经打开，切换到该项目的窗口
-                        val windowManager = WindowManager.getInstance()
-                        val frame = windowManager.getFrame(existingProject)
-                        if (frame != null) {
-                            frame.toFront()
-                            frame.isVisible = true
-                            // 请求窗口获得焦点
-                            frame.requestFocus()
-                        }
-                    } else {
-                        // 项目未打开，打开新项目
-                        val virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(projectDir)
-                        if (virtualFile != null) {
-                            ProjectUtil.openOrImport(worktreePath, null, true)
-                        } else {
-                            Messages.showErrorDialog(
-                                project,
-                                "无法访问目录: $worktreePath",
-                                "打开 Worktree 失败"
-                            )
-                        }
-                    }
                 } catch (e: Exception) {
+                    null
+                }
+                
+                // UI 操作需要在 EDT 上执行
+                ApplicationManager.getApplication().invokeLater {
+                    try {
+                        if (existingProject != null) {
+                            // 项目已经打开，切换到该项目的窗口
+                            val windowManager = WindowManager.getInstance()
+                            val frame = windowManager.getFrame(existingProject)
+                            if (frame != null) {
+                                frame.toFront()
+                                frame.isVisible = true
+                                // 请求窗口获得焦点
+                                frame.requestFocus()
+                            }
+                        } else {
+                            // 项目未打开，直接使用 ProjectUtil.openOrImport
+                            // 这个方法会处理文件系统操作
+                            ProjectUtil.openOrImport(worktreePath, null, true)
+                        }
+                    } catch (e: Exception) {
+                        Messages.showErrorDialog(
+                            project,
+                            "打开目录时出错: ${e.message}",
+                            "打开 Worktree 失败"
+                        )
+                        e.printStackTrace()
+                    }
+                }
+            } catch (e: Exception) {
+                ApplicationManager.getApplication().invokeLater {
                     Messages.showErrorDialog(
                         project,
                         "打开目录时出错: ${e.message}",
@@ -329,13 +335,6 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                     e.printStackTrace()
                 }
             }
-        } catch (e: Exception) {
-            Messages.showErrorDialog(
-                project,
-                "打开目录时出错: ${e.message}",
-                "打开 Worktree 失败"
-            )
-            e.printStackTrace()
         }
     }
     
