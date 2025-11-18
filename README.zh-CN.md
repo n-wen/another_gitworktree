@@ -51,6 +51,19 @@
 
 ## 安装
 
+### 方式一：从 GitHub Releases 下载（推荐）
+
+1. 访问 [Releases 页面](https://github.com/n-wen/another_gitworktree/releases)
+2. 下载最新的 `another_gitworktree-*.zip` 文件
+3. 安装插件：
+   - 打开 IntelliJ IDEA
+   - 进入 **File** → **Settings** → **Plugins**（macOS 上为 **IntelliJ IDEA** → **Preferences** → **Plugins**）
+   - 点击 ⚙️ 图标 → **Install Plugin from Disk...**
+   - 选择下载的 zip 文件
+   - 点击 **OK** 并重启 IDEA
+
+### 方式二：从源码构建
+
 1. 克隆仓库：
 ```bash
 git clone https://github.com/n-wen/another_gitworktree.git
@@ -64,8 +77,12 @@ cd another_gitworktree
 
 3. 安装插件：
    - 打开 IntelliJ IDEA
-   - 进入 Settings → Plugins → ⚙️ → Install Plugin from Disk...
-   - 选择 `build/distributions/another_gitworktree-1.0-SNAPSHOT.zip`
+   - 进入 **File** → **Settings** → **Plugins** → ⚙️ → **Install Plugin from Disk...**
+   - 选择 `build/distributions/another_gitworktree-*.zip`
+
+### 方式三：从 JetBrains Marketplace 安装（即将推出）
+
+在插件市场中搜索 "Another Git Worktree"。
 
 ## 使用方法
 
@@ -128,7 +145,7 @@ cd another_gitworktree
 
 ## 系统要求
 
-- IntelliJ IDEA 2025.1+ 或其他 IntelliJ 平台 IDE
+- IntelliJ IDEA 2023.3+ 或其他 IntelliJ 平台 IDE
 - Git 2.15+ （支持 `git worktree` 命令）
 
 ## 依赖
@@ -147,7 +164,19 @@ cd another_gitworktree
 
 ## 更新日志
 
-### v1.0.0 (Current)
+### v1.0.2 (最新版本)
+- ✨ 扩展兼容性至 IDEA 2023.3+（无上限）
+- 🛡️ 修复：主 worktree 现在无法被删除（按钮和菜单项已禁用）
+- 🔄 改进：删除 worktree 前自动关闭已打开的项目
+- 📁 增强：更好地处理删除时被锁定的目录
+- ⚠️ 改进：更详细的 worktree 操作错误提示
+- 🎯 修复：首次打开时自动加载 worktree 列表（无需手动刷新）
+
+### v1.0.1
+- ✨ 修复：将所有 UI 文本改为英文，面向国际用户
+- 🌐 改进：统一整个界面的语言
+
+### v1.0.0
 - ✨ 初始版本发布
 - ✨ Worktree 列表展示
 - ✨ 双击打开 worktree 目录

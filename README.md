@@ -51,7 +51,18 @@ A Git Worktree management plugin for IntelliJ IDEA that provides a visual interf
 
 ## Installation
 
-### Option 1: Build from Source
+### Option 1: Download from GitHub Releases (Recommended)
+
+1. Go to [Releases](https://github.com/n-wen/another_gitworktree/releases)
+2. Download the latest `another_gitworktree-*.zip` file
+3. Install the plugin:
+   - Open IntelliJ IDEA
+   - Go to **File** → **Settings** → **Plugins** (or **IntelliJ IDEA** → **Preferences** → **Plugins** on macOS)
+   - Click the ⚙️ icon → **Install Plugin from Disk...**
+   - Select the downloaded zip file
+   - Click **OK** and restart IDEA
+
+### Option 2: Build from Source
 
 1. Clone the repository:
 ```bash
@@ -66,10 +77,10 @@ cd another_gitworktree
 
 3. Install the plugin:
    - Open IntelliJ IDEA
-   - Go to Settings → Plugins → ⚙️ → Install Plugin from Disk...
-   - Select `build/distributions/another_gitworktree-1.0-SNAPSHOT.zip`
+   - Go to **File** → **Settings** → **Plugins** → ⚙️ → **Install Plugin from Disk...**
+   - Select `build/distributions/another_gitworktree-*.zip`
 
-### Option 2: From JetBrains Marketplace (Coming Soon)
+### Option 3: From JetBrains Marketplace (Coming Soon)
 
 Search for "Another Git Worktree" in the plugin marketplace.
 
@@ -134,7 +145,7 @@ Search for "Another Git Worktree" in the plugin marketplace.
 
 ## System Requirements
 
-- IntelliJ IDEA 2025.1+ or other IntelliJ Platform IDEs
+- IntelliJ IDEA 2023.3+ or other IntelliJ Platform IDEs
 - Git 2.15+ (supports `git worktree` command)
 
 ## Dependencies
@@ -161,7 +172,19 @@ Issues and Pull Requests are welcome!
 
 ## Changelog
 
-### v1.0.0 (Current)
+### v1.0.2 (Latest)
+- ✨ Extended compatibility to IDEA 2023.3+ (no upper limit)
+- 🛡️ Fixed: Main worktree can no longer be deleted (button disabled, menu item disabled)
+- 🔄 Improved: Auto-close open projects before deleting their worktree
+- 📁 Enhanced: Better handling of locked directories during deletion
+- ⚠️ Better: More informative error messages for worktree operations
+- 🎯 Fixed: Worktree list now loads automatically on first open (no manual refresh needed)
+
+### v1.0.1
+- ✨ Fixed: Changed all UI text to English for international users
+- 🌐 Improved: Standardized language across the entire interface
+
+### v1.0.0
 - ✨ Initial release
 - ✨ Worktree list display
 - ✨ Double-click to open worktree directory
