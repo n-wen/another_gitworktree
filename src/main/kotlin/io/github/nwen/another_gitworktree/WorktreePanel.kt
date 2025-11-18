@@ -130,8 +130,10 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         add(topPanel, BorderLayout.NORTH)
         add(JBScrollPane(table), BorderLayout.CENTER)
         
-        // Initial load
-        refreshWorktrees()
+        // Initial load - use invokeLater to ensure Git repository is ready
+        ApplicationManager.getApplication().invokeLater {
+            refreshWorktrees()
+        }
     }
     
     private fun showContextMenu(e: MouseEvent) {
