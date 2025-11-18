@@ -4,6 +4,7 @@ import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -11,7 +12,14 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.table.JBTable
+import javax.swing.DefaultListModel
+import javax.swing.JComponent
+import javax.swing.JList
+import javax.swing.ListSelectionModel
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 import git4idea.repo.GitRepository
 import git4idea.repo.GitRepositoryManager
 import java.awt.BorderLayout
@@ -375,22 +383,25 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     private fun showBranchInputDialog(repository: GitRepository, defaultBranch: String?): String? {
         // 获取所有分支列表
         val branches = getAllBranches(repository)
-        val branchList = branches.joinToString("\n")
         
-        val message = if (branches.isNotEmpty()) {
-            "请选择或输入分支名:\n\n可用分支:\n$branchList\n\n分支名:"
-        } else {
-            "请输入分支名:"
+        if (branches.isEmpty()) {
+            // 如果没有分支，使用简单的输入对话框
+            return Messages.showInputDialog(
+                project,
+                "请输入分支名:",
+                "选择分支",
+                Messages.getQuestionIcon(),
+                defaultBranch ?: "",
+                null
+            )
         }
         
-        return Messages.showInputDialog(
-            project,
-            message,
-            "选择分支",
-            Messages.getQuestionIcon(),
-            defaultBranch ?: "",
-            null
-        )
+        // 使用自定义对话框选择分支
+        val dialog = BranchSelectionDialog(project, branches, defaultBranch)
+        if (dialog.showAndGet()) {
+            return dialog.selectedBranch
+        }
+        return null
     }
     
     private fun getAllBranches(repository: GitRepository): List<String> {
@@ -667,6 +678,140 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         }
         
         return worktrees
+    }
+}
+
+// 分支选择对话框
+private class BranchSelectionDialog(
+    project: Project,
+    private val allBranches: List<String>,
+    defaultBranch: String?
+) : DialogWrapper(project) {
+    
+    private val searchField = JBTextField()
+    private val branchList = JList<String>()
+    private val listModel = DefaultListModel<String>()
+    private val filteredBranches = mutableListOf<String>()
+    var selectedBranch: String? = null
+        private set
+    
+    init {
+        title = "选择分支"
+        branchList.model = listModel
+        branchList.selectionMode = ListSelectionModel.SINGLE_SELECTION
+        filteredBranches.addAll(allBranches)
+        updateListModel()
+        
+        // 设置默认选中项
+        if (defaultBranch != null && allBranches.contains(defaultBranch)) {
+            val index = filteredBranches.indexOf(defaultBranch)
+            if (index >= 0) {
+                branchList.selectedIndex = index
+                branchList.ensureIndexIsVisible(index)
+            }
+        } else if (filteredBranches.isNotEmpty()) {
+            branchList.selectedIndex = 0
+        }
+        
+        // 搜索框监听器，实现实时过滤
+        searchField.document.addDocumentListener(object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) {
+                filterBranches()
+            }
+            
+            override fun removeUpdate(e: DocumentEvent) {
+                filterBranches()
+            }
+            
+            override fun changedUpdate(e: DocumentEvent) {
+                filterBranches()
+            }
+        })
+        
+        // 双击列表项确认选择
+        branchList.addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                if (e.clickCount == 2) {
+                    doOKAction()
+                }
+            }
+        })
+        
+        // 回车键确认选择
+        searchField.addActionListener {
+            if (branchList.selectedIndex >= 0) {
+                doOKAction()
+            } else if (searchField.text.isNotBlank()) {
+                // 如果输入了文本但没有选中项，使用输入的文本
+                selectedBranch = searchField.text.trim()
+                close(OK_EXIT_CODE)
+            }
+        }
+        
+        init()
+    }
+    
+    private fun updateListModel() {
+        listModel.clear()
+        filteredBranches.forEach { listModel.addElement(it) }
+    }
+    
+    private fun filterBranches() {
+        val searchText = searchField.text.trim().lowercase()
+        filteredBranches.clear()
+        
+        if (searchText.isEmpty()) {
+            filteredBranches.addAll(allBranches)
+        } else {
+            filteredBranches.addAll(
+                allBranches.filter { it.lowercase().contains(searchText) }
+            )
+        }
+        
+        updateListModel()
+        
+        // 如果有过滤结果，选中第一项
+        if (filteredBranches.isNotEmpty()) {
+            branchList.selectedIndex = 0
+        } else {
+            branchList.selectedIndex = -1
+        }
+    }
+    
+    override fun createCenterPanel(): JComponent {
+        val panel = JBPanel<JBPanel<*>>(BorderLayout())
+        
+        // 搜索框
+        val searchPanel = JBPanel<JBPanel<*>>(BorderLayout())
+        searchPanel.add(JBLabel("搜索分支:"), BorderLayout.WEST)
+        searchPanel.add(searchField, BorderLayout.CENTER)
+        
+        // 分支列表
+        val scrollPane = JBScrollPane(branchList)
+        scrollPane.preferredSize = java.awt.Dimension(400, 300)
+        
+        panel.add(searchPanel, BorderLayout.NORTH)
+        panel.add(scrollPane, BorderLayout.CENTER)
+        
+        return panel
+    }
+    
+    override fun doOKAction() {
+        val selectedIndex = branchList.selectedIndex
+        if (selectedIndex >= 0 && selectedIndex < filteredBranches.size) {
+            selectedBranch = filteredBranches[selectedIndex]
+        } else if (searchField.text.isNotBlank()) {
+            // 如果输入了文本但没有选中项，使用输入的文本
+            selectedBranch = searchField.text.trim()
+        }
+        
+        if (selectedBranch != null) {
+            super.doOKAction()
+        }
+    }
+    
+    override fun getPreferredFocusedComponent(): JComponent {
+        return searchField
     }
 }
 
