@@ -158,6 +158,14 @@ cd another_gitworktree
 
 欢迎提交 Issue 和 Pull Request！
 
+### 开发设置
+
+1. Fork 本仓库
+2. 创建你的功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交你的更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 开启一个 Pull Request
+
 ## 许可证
 
 [MIT License](LICENSE)
