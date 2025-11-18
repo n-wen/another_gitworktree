@@ -130,9 +130,33 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         add(topPanel, BorderLayout.NORTH)
         add(JBScrollPane(table), BorderLayout.CENTER)
         
-        // Initial load - use invokeLater to ensure Git repository is ready
+        // Initial load - show loading and wait for repository to be ready
+        showLoading()
+        
+        // Use invokeLater with multiple retries to ensure Git repository is ready
+        scheduleRefresh(0)
+    }
+    
+    private fun showLoading() {
+        tableModel.rowCount = 0
+        tableModel.addRow(arrayOf("", "Loading worktrees...", "", ""))
+    }
+    
+    private fun scheduleRefresh(attemptCount: Int) {
         ApplicationManager.getApplication().invokeLater {
-            refreshWorktrees()
+            val repositoryManager = GitRepositoryManager.getInstance(project)
+            val repositories = repositoryManager.repositories
+            
+            if (repositories.isEmpty() && attemptCount < 10) {
+                // Repository not ready yet, retry after delay
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    Thread.sleep(200) // Wait 200ms
+                    scheduleRefresh(attemptCount + 1)
+                }
+            } else {
+                // Repository ready or max attempts reached, refresh now
+                refreshWorktrees()
+            }
         }
     }
     
