@@ -24,10 +24,28 @@ jobs:
       uses: gradle/gradle-build-action@v3
       
     - name: Build with Gradle
-      run: ./gradlew build
+      run: |
+        # Retry build up to 3 times to handle transient network issues
+        for i in 1 2 3; do
+          if ./gradlew build --no-configuration-cache; then
+            exit 0
+          fi
+          echo "Build attempt $i failed, retrying..."
+          sleep 5
+        done
+        exit 1
       
     - name: Build Plugin
-      run: ./gradlew buildPlugin
+      run: |
+        # Retry build up to 3 times to handle transient network issues
+        for i in 1 2 3; do
+          if ./gradlew buildPlugin --no-configuration-cache; then
+            exit 0
+          fi
+          echo "Build attempt $i failed, retrying..."
+          sleep 5
+        done
+        exit 1
       
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
