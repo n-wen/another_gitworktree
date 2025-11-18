@@ -23,6 +23,7 @@ class WorktreeTabInstaller : ProjectManagerListener {
         }
     }
     
+    @Deprecated("Deprecated by ProjectManagerListener")
     override fun projectOpened(project: Project) {
         thisLogger().info("WorktreeTabInstaller.projectOpened() called for project: ${project.name}")
         

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.nwen"
-version = "1.0.1"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
@@ -18,7 +18,8 @@ repositories {
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
 dependencies {
     intellijPlatform {
-        create("IC", "2025.1.4.1")
+        // Use 2023.3 as the base version for broader compatibility
+        create("IC", "2023.3")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
 
         // Add necessary plugin dependencies for compilation here, example:
@@ -30,7 +31,8 @@ dependencies {
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "251"
+            // Support from 2023.3 onwards, no upper limit
+            sinceBuild = "233"
         }
 
         changeNotes = """
@@ -40,15 +42,15 @@ intellijPlatform {
 }
 
 tasks {
-    // Set the JVM compatibility versions
+    // Set the JVM compatibility versions - JVM 17 for 2023.x compatibility
     withType<JavaCompile> {
-        sourceCompatibility = "21"
-        targetCompatibility = "21"
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
     }
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }

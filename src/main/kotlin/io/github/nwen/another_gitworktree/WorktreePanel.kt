@@ -2,6 +2,7 @@ package io.github.nwen.another_gitworktree
 
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogWrapper
@@ -28,6 +29,7 @@ import java.awt.event.ActionListener
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io.BufferedReader
+import java.io.File
 import java.io.InputStreamReader
 import javax.swing.JButton
 import javax.swing.JPopupMenu
@@ -39,7 +41,8 @@ data class WorktreeInfo(
     val path: String,
     val commitHash: String,
     val branch: String?,
-    val isLocked: Boolean = false
+    val isLocked: Boolean = false,
+    val isMain: Boolean = false  // Main worktree cannot be deleted
 )
 
 // Custom TableModel to disable editing
@@ -53,6 +56,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     private val tableModel = NonEditableTableModel()
     private val table: JTable
     private val worktreeList = mutableListOf<WorktreeInfo>()
+    private lateinit var deleteButton: JButton
 
     init {
         // Create table
@@ -91,6 +95,11 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                     }
                 }
             })
+            
+            // Add selection listener to update delete button state
+            selectionModel.addListSelectionListener {
+                updateDeleteButtonState()
+            }
         }
         
         // Add refresh and create buttons
@@ -105,7 +114,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 }
             })
         }
-        val deleteButton = JButton("Delete").apply {
+        deleteButton = JButton("Delete").apply {
             addActionListener(object : ActionListener {
                 override fun actionPerformed(e: ActionEvent?) {
                     deleteSelectedWorktree()
@@ -160,6 +169,16 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         }
     }
     
+    private fun updateDeleteButtonState() {
+        val selectedRow = table.selectedRow
+        if (selectedRow >= 0 && selectedRow < worktreeList.size) {
+            val selectedWorktree = worktreeList[selectedRow]
+            deleteButton.isEnabled = !selectedWorktree.isMain
+        } else {
+            deleteButton.isEnabled = false
+        }
+    }
+    
     private fun showContextMenu(e: MouseEvent) {
         val selectedRow = table.rowAtPoint(e.point)
         if (selectedRow < 0 || selectedRow >= worktreeList.size) {
@@ -178,6 +197,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         popupMenu.addSeparator()
         
         val deleteItem = JMenuItem("Delete Worktree")
+        deleteItem.isEnabled = !worktree.isMain  // Disable delete for main worktree
         deleteItem.addActionListener {
             deleteWorktree(worktree)
         }
@@ -198,16 +218,55 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         }
         
         val worktree = worktreeList[selectedRow]
+        
+        // Check if it's the main worktree
+        if (worktree.isMain) {
+            Messages.showWarningDialog(
+                project,
+                "Cannot delete the main worktree.\n\nThe main worktree is the root of your Git repository and cannot be removed.",
+                "Delete Worktree"
+            )
+            return
+        }
+        
         deleteWorktree(worktree)
     }
     
     private fun deleteWorktree(worktree: WorktreeInfo) {
         val worktreePath = worktree.path
         
+        // Check if the worktree is currently open as a project
+        val openProjects = ProjectManager.getInstance().openProjects
+        var targetProject: Project? = null
+        
+        try {
+            val worktreeFile = File(worktreePath)
+            if (worktreeFile.exists()) {
+                val worktreeCanonicalPath = worktreeFile.canonicalPath
+                
+                for (openProject in openProjects) {
+                    val projectFile = File(openProject.basePath ?: continue)
+                    if (projectFile.exists() && projectFile.canonicalPath == worktreeCanonicalPath) {
+                        targetProject = openProject
+                        break
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            thisLogger().error("Failed to check if worktree is open", e)
+        }
+        
+        // Prepare confirmation message
+        val message = if (targetProject != null) {
+            "The worktree at:\n$worktreePath\n\nis currently open in IDEA.\n\nTo delete it, the project will be closed first.\nDo you want to continue?"
+        } else {
+            "Are you sure you want to delete this worktree?\n\nPath: $worktreePath\nBranch: ${worktree.branch ?: "(detached HEAD)"}"
+        }
+        
         // Confirm deletion
         val result = Messages.showYesNoDialog(
             project,
-            "Are you sure you want to delete this worktree?\n\nPath: $worktreePath\nBranch: ${worktree.branch ?: "(detached HEAD)"}",
+            message,
             "Delete Worktree",
             Messages.getQuestionIcon()
         )
@@ -216,62 +275,114 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             return
         }
         
-        // Execute deletion
-        executeDeleteWorktree(worktree)
+        // If the worktree is open, close it first
+        if (targetProject != null) {
+            val projectToClose = targetProject
+            ApplicationManager.getApplication().invokeLater {
+                ProjectManager.getInstance().closeAndDispose(projectToClose)
+                // Wait a bit for the project to close, then delete
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    Thread.sleep(500) // Wait 500ms for project to fully close
+                    executeDeleteWorktree(worktree)
+                }
+            }
+        } else {
+            executeDeleteWorktree(worktree)
+        }
     }
     
     private fun executeDeleteWorktree(worktree: WorktreeInfo) {
-        try {
-            val repositoryManager = GitRepositoryManager.getInstance(project)
-            val repositories = repositoryManager.repositories
-            
-            if (repositories.isEmpty()) {
-                Messages.showErrorDialog(project, "Git repository not found", "Delete Worktree Failed")
-                return
+        ApplicationManager.getApplication().executeOnPooledThread {
+            try {
+                val repositoryManager = GitRepositoryManager.getInstance(project)
+                val repositories = repositoryManager.repositories
+                
+                if (repositories.isEmpty()) {
+                    ApplicationManager.getApplication().invokeLater {
+                        Messages.showErrorDialog(project, "Git repository not found", "Delete Worktree Failed")
+                    }
+                    return@executeOnPooledThread
+                }
+                
+                val repository = repositories.first()
+                val root = repository.root
+                val rootFile = File(root.path)
+                val worktreePath = worktree.path
+                
+                // Execute git worktree remove command
+                // Use --force option in case worktree has uncommitted changes or unpushed commits
+                val processBuilder = ProcessBuilder("git", "worktree", "remove", worktreePath, "--force")
+                processBuilder.directory(rootFile)
+                val process = processBuilder.start()
+                
+                val errorReader = BufferedReader(InputStreamReader(process.errorStream))
+                val errorLines = errorReader.readLines()
+                val exitCode = process.waitFor()
+                
+                ApplicationManager.getApplication().invokeLater {
+                    if (exitCode != 0) {
+                        val errorMessage = errorLines.joinToString("\n")
+                        
+                        // Check if directory still exists (might be locked)
+                        val worktreeDir = File(worktreePath)
+                        if (worktreeDir.exists()) {
+                            Messages.showWarningDialog(
+                                project,
+                                "Git failed to fully remove the worktree:\n$errorMessage\n\nThe directory may be in use. Please close all programs using this directory and try again.",
+                                "Delete Worktree Failed"
+                            )
+                        } else {
+                            Messages.showErrorDialog(
+                                project,
+                                "Failed to delete worktree:\n$errorMessage",
+                                "Delete Worktree Failed"
+                            )
+                        }
+                        return@invokeLater
+                    }
+                    
+                    // Check if directory still exists after git worktree remove
+                    val worktreeDir = File(worktreePath)
+                    if (worktreeDir.exists()) {
+                        // Git removed it from tracking but directory still exists
+                        // Try to delete the directory manually
+                        try {
+                            worktreeDir.deleteRecursively()
+                            Messages.showInfoMessage(
+                                project,
+                                "Worktree deleted successfully.\n\nNote: The directory was manually removed as it was still present after Git operation.",
+                                "Delete Worktree Successful"
+                            )
+                        } catch (e: Exception) {
+                            Messages.showWarningDialog(
+                                project,
+                                "Worktree removed from Git tracking, but the directory could not be deleted:\n$worktreePath\n\nThe directory may be in use by another program. Please close all programs using this directory and delete it manually.\n\nError: ${e.message}",
+                                "Delete Worktree Partially Successful"
+                            )
+                        }
+                    } else {
+                        // Full success
+                        Messages.showInfoMessage(
+                            project,
+                            "Worktree deleted successfully: $worktreePath",
+                            "Delete Worktree Successful"
+                        )
+                    }
+                    
+                    // Refresh list
+                    refreshWorktrees()
+                }
+                
+            } catch (e: Exception) {
+                ApplicationManager.getApplication().invokeLater {
+                    Messages.showErrorDialog(
+                        project,
+                        "Error deleting worktree: ${e.message}",
+                        "Delete Worktree Failed"
+                    )
+                }
+                e.printStackTrace()
             }
-            
-            val repository = repositories.first()
-            val root = repository.root
-            val rootFile = java.io.File(root.path)
-            val worktreePath = worktree.path
-            
-            // Execute git worktree remove command
-            // Use --force option in case worktree has uncommitted changes or unpushed commits
-            val processBuilder = ProcessBuilder("git", "worktree", "remove", worktreePath, "--force")
-            processBuilder.directory(rootFile)
-            val process = processBuilder.start()
-            
-            val errorReader = BufferedReader(InputStreamReader(process.errorStream))
-            val errorLines = errorReader.readLines()
-            val exitCode = process.waitFor()
-            
-            if (exitCode != 0) {
-                val errorMessage = errorLines.joinToString("\n")
-                Messages.showErrorDialog(
-                    project,
-                    "Failed to delete worktree:\n$errorMessage",
-                    "Delete Worktree Failed"
-                )
-                return
-            }
-            
-            // Deletion successful, refresh list
-            Messages.showInfoMessage(
-                project,
-                "Worktree deleted successfully: $worktreePath",
-                "Delete Worktree Successful"
-            )
-            
-            // Refresh list
-            refreshWorktrees()
-            
-        } catch (e: Exception) {
-            Messages.showErrorDialog(
-                project,
-                "Error deleting worktree: ${e.message}",
-                "Delete Worktree Failed"
-            )
-            e.printStackTrace()
         }
     }
     
@@ -599,6 +710,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             var currentCommit: String? = null
             var currentBranch: String? = null
             var isLocked = false
+            var isFirstWorktree = true  // First worktree in list is the main one
             
             for (line in lines) {
                 when {
@@ -609,8 +721,10 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                                 path = currentPath,
                                 commitHash = currentCommit,
                                 branch = currentBranch,
-                                isLocked = isLocked
+                                isLocked = isLocked,
+                                isMain = isFirstWorktree
                             ))
+                            isFirstWorktree = false
                         }
                         // Start new worktree
                         currentPath = line.substring(9).trim()
@@ -640,7 +754,8 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                     path = currentPath,
                     commitHash = currentCommit,
                     branch = currentBranch,
-                    isLocked = isLocked
+                    isLocked = isLocked,
+                    isMain = isFirstWorktree
                 ))
             }
             
@@ -653,6 +768,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 val simpleLines = simpleReader.readLines()
                 simpleProcess.waitFor()
                 
+                var isFirstWorktree = true
                 for (line in simpleLines) {
                     if (line.isNotBlank()) {
                         // Parse format: /path/to/worktree [branch] commit-hash
@@ -681,8 +797,10 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                                 path = path,
                                 commitHash = commit.ifEmpty { "unknown" },
                                 branch = branch,
-                                isLocked = false
+                                isLocked = false,
+                                isMain = isFirstWorktree
                             ))
+                            isFirstWorktree = false
                         }
                     }
                 }
@@ -695,7 +813,8 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                     path = repository.root.path,
                     commitHash = repository.currentRevision ?: "unknown",
                     branch = repository.currentBranchName,
-                    isLocked = false
+                    isLocked = false,
+                    isMain = true
                 ))
             } catch (e2: Exception) {
                 // Final error handling

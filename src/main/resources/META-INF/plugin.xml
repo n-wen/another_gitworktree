@@ -44,6 +44,16 @@
     
     <!-- Change notes displayed in the IDE and on the plugin page -->
     <change-notes><![CDATA[
+        <h2>Version 1.0.2</h2>
+        <ul>
+            <li>✨ New: Extended compatibility to IDEA 2023.3+ (no upper limit)</li>
+            <li>🛡️ Fixed: Main worktree can no longer be deleted (button disabled, menu item disabled)</li>
+            <li>🔄 Improved: Auto-close open projects before deleting their worktree</li>
+            <li>📁 Enhanced: Better handling of locked directories during deletion</li>
+            <li>⚠️ Better: More informative error messages for worktree operations</li>
+            <li>🎯 Fixed: Worktree list now loads automatically on first open (no manual refresh needed)</li>
+        </ul>
+        
         <h2>Version 1.0.1</h2>
         <ul>
             <li>🐛 Fixed: Changed all UI text to English for international users</li>
