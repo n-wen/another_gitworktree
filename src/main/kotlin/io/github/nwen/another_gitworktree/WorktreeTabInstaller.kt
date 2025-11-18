@@ -11,6 +11,14 @@ import com.intellij.ui.content.ContentFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 class WorktreeTabInstaller : ProjectManagerListener {
+    companion object {
+        private val worktreePanels = mutableMapOf<Project, WorktreePanel>()
+        
+        fun getWorktreePanel(project: Project): WorktreePanel? {
+            return worktreePanels[project]
+        }
+    }
+    
     override fun projectOpened(project: Project) {
         thisLogger().info("WorktreeTabInstaller.projectOpened() called for project: ${project.name}")
         
@@ -79,6 +87,7 @@ class WorktreeTabInstaller : ProjectManagerListener {
                 thisLogger().info("Creating Worktree tab content")
                 val contentFactory = ContentFactory.getInstance()
                 val worktreePanel = WorktreePanel(project)
+                worktreePanels[project] = worktreePanel
                 val content = contentFactory.createContent(worktreePanel, "Worktree", false)
                 
                 toolWindow.contentManager.addContent(content)
