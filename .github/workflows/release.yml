@@ -37,37 +37,33 @@ jobs:
       with:
         files: |
           build/distributions/*.zip
-        name: Release v${{ steps.get_version.outputs.version }}
+        name: v${{ steps.get_version.outputs.version }}
         body: |
-          ## 🎉 Release v${{ steps.get_version.outputs.version }}
+          ## 🎉 Another Git Worktree v${{ steps.get_version.outputs.version }}
           
-          ### 📦 Plugin Package
-          - **File**: `another_gitworktree-${{ steps.get_version.outputs.version }}.zip`
-          - **Size**: ~46KB
+          ### 📦 Download
+          
+          Download the plugin package: **[another_gitworktree-${{ steps.get_version.outputs.version }}.zip](https://github.com/n-wen/another_gitworktree/releases/download/v${{ steps.get_version.outputs.version }}/another_gitworktree-${{ steps.get_version.outputs.version }}.zip)** (~46KB)
           
           ### 📥 Installation
           
-          #### From JetBrains Marketplace (Recommended)
-          1. Open IntelliJ IDEA
-          2. Go to **File** → **Settings** → **Plugins**
-          3. Search for "Another Git Worktree"
-          4. Click **Install**
-          
-          #### Manual Installation
-          1. Download the zip file from this release
+          1. Download the zip file above
           2. Open IntelliJ IDEA
-          3. Go to **File** → **Settings** → **Plugins**
+          3. Go to **File** → **Settings** → **Plugins** (or **IntelliJ IDEA** → **Preferences** → **Plugins** on macOS)
           4. Click the ⚙️ icon → **Install Plugin from Disk...**
           5. Select the downloaded zip file
-          6. Restart IDEA
+          6. Click **OK** and restart IDEA
           
-          ### 📋 Changes
+          For more installation options, see the [README](https://github.com/n-wen/another_gitworktree#installation).
           
-          See [CHANGELOG](https://github.com/n-wen/another_gitworktree/blob/main/CHANGELOG.md) for detailed changes.
+          ### ✨ What's New
+          
+          See the [Changelog](https://github.com/n-wen/another_gitworktree/blob/main/README.md#changelog) section in README for detailed changes.
           
           ### 🔗 Links
+          
           - 📖 [Documentation](https://github.com/n-wen/another_gitworktree#readme)
-          - 🐛 [Issue Tracker](https://github.com/n-wen/another_gitworktree/issues)
+          - 🐛 [Report Issues](https://github.com/n-wen/another_gitworktree/issues)
           - 💬 [Discussions](https://github.com/n-wen/another_gitworktree/discussions)
           
           ---
