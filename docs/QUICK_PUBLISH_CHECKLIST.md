@@ -12,15 +12,15 @@
 - [x] 更新 README.md 和 README.zh-CN.md 中的 `your.email@example.com` ✅
 
 ### 2. 准备截图
-- [ ] 创建 `docs/screenshots/` 目录
-- [ ] 截取至少 3 张高质量截图（推荐 1920x1080）：
-  - [ ] `worktree-list.png` - Worktree 列表界面
-  - [ ] `create-worktree.png` - 创建对话框
-  - [ ] `branch-selection.png` - 分支选择对话框
+- [x] 创建 `docs/screenshots/` 目录 ✅
+- [x] 截取至少 3 张高质量截图（推荐 1920x1080）：✅
+  - [x] `worktree-list.png` - Worktree 列表界面 ✅
+  - [x] `create-worktree.png` - 创建对话框 ✅
+  - [x] `branch-selection.png` - 分支选择对话框 ✅
 - [ ] （可选）录制演示视频并上传到 YouTube
 
 ### 3. 设置版本号
-- [ ] 在 `build.gradle.kts` 中将版本号改为 `1.0.0`（去掉 `-SNAPSHOT`）
+- [x] 在 `build.gradle.kts` 中将版本号改为 `1.0.0`（去掉 `-SNAPSHOT`）✅
 
 ### 4. 构建最终版本
 ```bash
