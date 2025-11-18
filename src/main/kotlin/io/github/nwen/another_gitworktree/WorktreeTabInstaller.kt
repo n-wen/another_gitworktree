@@ -78,7 +78,7 @@ class WorktreeTabInstaller : ProjectManagerListener {
             try {
                 thisLogger().info("Creating Worktree tab content")
                 val contentFactory = ContentFactory.getInstance()
-                val worktreePanel = WorktreePanel()
+                val worktreePanel = WorktreePanel(project)
                 val content = contentFactory.createContent(worktreePanel, "Worktree", false)
                 
                 toolWindow.contentManager.addContent(content)
