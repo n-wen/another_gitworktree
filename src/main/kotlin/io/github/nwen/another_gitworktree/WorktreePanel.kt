@@ -42,7 +42,7 @@ data class WorktreeInfo(
     val isLocked: Boolean = false
 )
 
-// 自定义 TableModel，禁用编辑功能
+// Custom TableModel to disable editing
 private class NonEditableTableModel : DefaultTableModel() {
     override fun isCellEditable(row: Int, column: Int): Boolean {
         return false
@@ -55,17 +55,17 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     private val worktreeList = mutableListOf<WorktreeInfo>()
 
     init {
-        // 创建表格
-        tableModel.addColumn("路径")
-        tableModel.addColumn("分支")
-        tableModel.addColumn("提交")
-        tableModel.addColumn("状态")
+        // Create table
+        tableModel.addColumn("Path")
+        tableModel.addColumn("Branch")
+        tableModel.addColumn("Commit")
+        tableModel.addColumn("Status")
         
         table = JBTable(tableModel).apply {
             setShowGrid(true)
             autoResizeMode = JTable.AUTO_RESIZE_ALL_COLUMNS
             
-            // 添加双击事件监听器
+            // Add double-click event listener
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
                     if (e.clickCount == 2) {
@@ -74,7 +74,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                             openWorktreeDirectory(worktreeList[selectedRow])
                         }
                     } else if (e.isPopupTrigger || (e.button == MouseEvent.BUTTON3 && e.clickCount == 1)) {
-                        // 右键菜单
+                        // Right-click context menu
                         showContextMenu(e)
                     }
                 }
@@ -93,26 +93,26 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             })
         }
         
-        // 添加刷新按钮和创建按钮
+        // Add refresh and create buttons
         val topPanel = JBPanel<JBPanel<*>>(BorderLayout())
         val titleLabel = JBLabel("Git Worktrees")
         
         val buttonPanel = JBPanel<JBPanel<*>>(BorderLayout())
-        val createButton = JButton("创建 Worktree").apply {
+        val createButton = JButton("Create").apply {
             addActionListener(object : ActionListener {
                 override fun actionPerformed(e: ActionEvent?) {
                     createWorktree()
                 }
             })
         }
-        val deleteButton = JButton("删除 Worktree").apply {
+        val deleteButton = JButton("Delete").apply {
             addActionListener(object : ActionListener {
                 override fun actionPerformed(e: ActionEvent?) {
                     deleteSelectedWorktree()
                 }
             })
         }
-        val refreshButton = JButton("刷新").apply {
+        val refreshButton = JButton("Refresh").apply {
             addActionListener(object : ActionListener {
                 override fun actionPerformed(e: ActionEvent?) {
                     refreshWorktrees()
@@ -130,7 +130,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         add(topPanel, BorderLayout.NORTH)
         add(JBScrollPane(table), BorderLayout.CENTER)
         
-        // 初始加载
+        // Initial load
         refreshWorktrees()
     }
     
@@ -143,7 +143,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         val worktree = worktreeList[selectedRow]
         val popupMenu = JPopupMenu()
         
-        val openItem = JMenuItem("打开目录")
+        val openItem = JMenuItem("Open Directory")
         openItem.addActionListener {
             openWorktreeDirectory(worktree)
         }
@@ -151,7 +151,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         
         popupMenu.addSeparator()
         
-        val deleteItem = JMenuItem("删除 Worktree")
+        val deleteItem = JMenuItem("Delete Worktree")
         deleteItem.addActionListener {
             deleteWorktree(worktree)
         }
@@ -165,8 +165,8 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         if (selectedRow < 0 || selectedRow >= worktreeList.size) {
             Messages.showWarningDialog(
                 project,
-                "请先选择一个 worktree",
-                "删除 Worktree"
+                "Please select a worktree first",
+                "Delete Worktree"
             )
             return
         }
@@ -178,11 +178,11 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     private fun deleteWorktree(worktree: WorktreeInfo) {
         val worktreePath = worktree.path
         
-        // 确认删除
+        // Confirm deletion
         val result = Messages.showYesNoDialog(
             project,
-            "确定要删除 worktree 吗?\n\n路径: $worktreePath\n分支: ${worktree.branch ?: "(detached HEAD)"}",
-            "删除 Worktree",
+            "Are you sure you want to delete this worktree?\n\nPath: $worktreePath\nBranch: ${worktree.branch ?: "(detached HEAD)"}",
+            "Delete Worktree",
             Messages.getQuestionIcon()
         )
         
@@ -190,7 +190,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             return
         }
         
-        // 执行删除
+        // Execute deletion
         executeDeleteWorktree(worktree)
     }
     
@@ -200,7 +200,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             val repositories = repositoryManager.repositories
             
             if (repositories.isEmpty()) {
-                Messages.showErrorDialog(project, "未找到 Git 仓库", "删除 Worktree 失败")
+                Messages.showErrorDialog(project, "Git repository not found", "Delete Worktree Failed")
                 return
             }
             
@@ -209,8 +209,8 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             val rootFile = java.io.File(root.path)
             val worktreePath = worktree.path
             
-            // 执行 git worktree remove 命令
-            // 使用 --force 选项，如果 worktree 有未提交的更改或未推送的提交
+            // Execute git worktree remove command
+            // Use --force option in case worktree has uncommitted changes or unpushed commits
             val processBuilder = ProcessBuilder("git", "worktree", "remove", worktreePath, "--force")
             processBuilder.directory(rootFile)
             val process = processBuilder.start()
@@ -223,27 +223,27 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 val errorMessage = errorLines.joinToString("\n")
                 Messages.showErrorDialog(
                     project,
-                    "删除 worktree 失败:\n$errorMessage",
-                    "删除 Worktree 失败"
+                    "Failed to delete worktree:\n$errorMessage",
+                    "Delete Worktree Failed"
                 )
                 return
             }
             
-            // 删除成功，刷新列表
+            // Deletion successful, refresh list
             Messages.showInfoMessage(
                 project,
-                "Worktree 删除成功: $worktreePath",
-                "删除 Worktree 成功"
+                "Worktree deleted successfully: $worktreePath",
+                "Delete Worktree Successful"
             )
             
-            // 刷新列表
+            // Refresh list
             refreshWorktrees()
             
         } catch (e: Exception) {
             Messages.showErrorDialog(
                 project,
-                "删除 worktree 时出错: ${e.message}",
-                "删除 Worktree 失败"
+                "Error deleting worktree: ${e.message}",
+                "Delete Worktree Failed"
             )
             e.printStackTrace()
         }
@@ -252,7 +252,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     private fun openWorktreeDirectory(worktree: WorktreeInfo) {
         val worktreePath = worktree.path
         
-        // 在后台线程执行文件系统操作，然后在 EDT 上执行 UI 操作
+        // Execute file system operations on background thread, then UI operations on EDT
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
                 val worktreeFile = java.io.File(worktreePath)
@@ -261,8 +261,8 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                     ApplicationManager.getApplication().invokeLater {
                         Messages.showErrorDialog(
                             project,
-                            "目录不存在: $worktreePath",
-                            "打开 Worktree 失败"
+                            "Directory does not exist: $worktreePath",
+                            "Open Worktree Failed"
                         )
                     }
                     return@executeOnPooledThread
@@ -272,22 +272,22 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                     ApplicationManager.getApplication().invokeLater {
                         Messages.showErrorDialog(
                             project,
-                            "路径不是目录: $worktreePath",
-                            "打开 Worktree 失败"
+                            "Path is not a directory: $worktreePath",
+                            "Open Worktree Failed"
                         )
                     }
                     return@executeOnPooledThread
                 }
                 
-                // 规范化路径，确保路径比较的准确性（在后台线程执行）
+                // Normalize path to ensure accurate path comparison (on background thread)
                 val normalizedPath = worktreeFile.canonicalPath ?: worktreePath
-                
-                // 在后台线程检查项目是否已经打开（避免在 EDT 上执行文件系统操作）
+
+                // Check if project is already open on background thread (avoid file system operations on EDT)
                 val existingProject = try {
                     val projectManager = ProjectManager.getInstance()
                     val openProjects = projectManager.openProjects
                     
-                    // 查找是否已经有项目打开在相同的目录
+                    // Find if a project is already open in the same directory
                     openProjects.firstOrNull { openProject ->
                         val openProjectBasePath = openProject.basePath
                         if (openProjectBasePath != null) {
@@ -306,29 +306,29 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                     null
                 }
                 
-                // UI 操作需要在 EDT 上执行
+                // UI operations must be executed on EDT
                 ApplicationManager.getApplication().invokeLater {
                     try {
                         if (existingProject != null) {
-                            // 项目已经打开，切换到该项目的窗口
+                            // Project already open, switch to its window
                             val windowManager = WindowManager.getInstance()
                             val frame = windowManager.getFrame(existingProject)
                             if (frame != null) {
                                 frame.toFront()
                                 frame.isVisible = true
-                                // 请求窗口获得焦点
+                                // Request window focus
                                 frame.requestFocus()
                             }
                         } else {
-                            // 项目未打开，直接使用 ProjectUtil.openOrImport
-                            // 这个方法会处理文件系统操作
+                            // Project not open, use ProjectUtil.openOrImport directly
+                            // This method handles file system operations
                             ProjectUtil.openOrImport(worktreePath, null, true)
                         }
                     } catch (e: Exception) {
                         Messages.showErrorDialog(
                             project,
-                            "打开目录时出错: ${e.message}",
-                            "打开 Worktree 失败"
+                            "Error opening directory: ${e.message}",
+                            "Open Worktree Failed"
                         )
                         e.printStackTrace()
                     }
@@ -337,8 +337,8 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 ApplicationManager.getApplication().invokeLater {
                     Messages.showErrorDialog(
                         project,
-                        "打开目录时出错: ${e.message}",
-                        "打开 Worktree 失败"
+                        "Error opening directory: ${e.message}",
+                        "Open Worktree Failed"
                     )
                     e.printStackTrace()
                 }
@@ -351,52 +351,52 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         val repositories = repositoryManager.repositories
         
         if (repositories.isEmpty()) {
-            Messages.showErrorDialog(project, "未找到 Git 仓库", "创建 Worktree 失败")
+            Messages.showErrorDialog(project, "Git repository not found", "Create Worktree Failed")
             return
         }
         
         val repository = repositories.first()
         val defaultBranch = repository.currentBranchName ?: "main"
         
-        // 显示对话框让用户输入或选择分支
+        // Show dialog for user to input or select branch
         val branch = showBranchInputDialog(repository, defaultBranch)
         if (branch == null || branch.isBlank()) {
             return
         }
         
-        // 验证分支是否存在
+        // Validate if branch exists
         if (!isValidBranchName(branch, repository)) {
-            Messages.showErrorDialog(project, "分支 '$branch' 不存在", "创建 Worktree 失败")
+            Messages.showErrorDialog(project, "Branch '$branch' does not exist", "Create Worktree Failed")
             return
         }
         
-        // 显示对话框让用户输入 worktree 路径
+        // Show dialog for user to input worktree path
         val worktreePath = showCreateWorktreeDialog(branch)
         if (worktreePath == null || worktreePath.isBlank()) {
             return
         }
         
-        // 创建 worktree
+        // Create worktree
         executeCreateWorktree(repository, branch, worktreePath)
     }
     
     private fun showBranchInputDialog(repository: GitRepository, defaultBranch: String?): String? {
-        // 获取所有分支列表
+        // Get all branches list
         val branches = getAllBranches(repository)
         
         if (branches.isEmpty()) {
-            // 如果没有分支，使用简单的输入对话框
+            // If no branches, use simple input dialog
             return Messages.showInputDialog(
                 project,
-                "请输入分支名:",
-                "选择分支",
+                "Enter branch name:",
+                "Select Branch",
                 Messages.getQuestionIcon(),
                 defaultBranch ?: "",
                 null
             )
         }
         
-        // 使用自定义对话框选择分支
+        // Use custom dialog to select branch
         val dialog = BranchSelectionDialog(project, branches, defaultBranch)
         if (dialog.showAndGet()) {
             return dialog.selectedBranch
@@ -423,12 +423,12 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     }
     
     private fun isValidBranchName(branchName: String, repository: GitRepository): Boolean {
-        // 检查分支名是否有效（简单验证）
+        // Check if branch name is valid (simple validation)
         if (branchName.isBlank() || branchName.contains(" ")) {
             return false
         }
         
-        // 可以进一步验证分支是否存在
+        // Can further validate if branch exists
         try {
             val root = repository.root
             val rootFile = java.io.File(root.path)
@@ -444,12 +444,12 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     
     private fun showCreateWorktreeDialog(branch: String): String? {
         val defaultPath = suggestWorktreePath(branch)
-        val message = "为分支 '$branch' 创建新的 worktree\n\n请输入 worktree 目录路径:"
+        val message = "Create new worktree for branch '$branch'\n\nEnter worktree directory path:"
         
         return Messages.showInputDialog(
             project,
             message,
-            "创建 Worktree",
+            "Create Worktree",
             Messages.getQuestionIcon(),
             defaultPath,
             null
@@ -468,13 +468,13 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             val root = repository.root
             val rootFile = java.io.File(root.path)
             
-            // 检查路径是否已存在
+            // Check if path already exists
             val worktreeDir = java.io.File(worktreePath)
             if (worktreeDir.exists()) {
                 val result = Messages.showYesNoDialog(
                     project,
-                    "目录已存在: $worktreePath\n\n是否要删除现有目录并创建新的 worktree?",
-                    "创建 Worktree",
+                    "Directory already exists: $worktreePath\n\nDo you want to delete existing directory and create new worktree?",
+                    "Create Worktree",
                     Messages.getWarningIcon()
                 )
                 if (result != Messages.YES) {
@@ -483,7 +483,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 worktreeDir.deleteRecursively()
             }
             
-            // 执行 git worktree add 命令
+            // Execute git worktree add command
             val processBuilder = ProcessBuilder("git", "worktree", "add", worktreePath, branch)
             processBuilder.directory(rootFile)
             val process = processBuilder.start()
@@ -496,27 +496,27 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 val errorMessage = errorLines.joinToString("\n")
                 Messages.showErrorDialog(
                     project,
-                    "创建 worktree 失败:\n$errorMessage",
-                    "创建 Worktree 失败"
+                    "Failed to create worktree:\n$errorMessage",
+                    "Create Worktree Failed"
                 )
                 return
             }
             
-            // 创建成功，刷新列表
+            // Creation successful, refresh list
             Messages.showInfoMessage(
                 project,
-                "Worktree 创建成功: $worktreePath",
-                "创建 Worktree 成功"
+                "Worktree created successfully: $worktreePath",
+                "Create Worktree Successful"
             )
             
-            // 刷新列表
+            // Refresh list
             refreshWorktrees()
             
         } catch (e: Exception) {
             Messages.showErrorDialog(
                 project,
-                "创建 worktree 时出错: ${e.message}",
-                "创建 Worktree 失败"
+                "Error creating worktree: ${e.message}",
+                "Create Worktree Failed"
             )
             e.printStackTrace()
         }
@@ -530,21 +530,21 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         val repositories = repositoryManager.repositories
         
         if (repositories.isEmpty()) {
-            tableModel.addRow(arrayOf("", "未找到 Git 仓库", "", ""))
+            tableModel.addRow(arrayOf("", "Git repository not found", "", ""))
             return
         }
         
-        // 使用第一个仓库（通常项目只有一个主仓库）
+        // Use first repository (usually project has only one main repository)
         val repository = repositories.first()
         val worktrees = getWorktrees(repository)
         
         if (worktrees.isEmpty()) {
-            tableModel.addRow(arrayOf("", "没有找到 worktree", "", ""))
+            tableModel.addRow(arrayOf("", "No worktrees found", "", ""))
         } else {
             worktreeList.addAll(worktrees)
             worktrees.forEach { worktree ->
                 val branchDisplay = worktree.branch ?: "(detached HEAD)"
-                val statusDisplay = if (worktree.isLocked) "已锁定" else "正常"
+                val statusDisplay = if (worktree.isLocked) "Locked" else "Normal"
                 tableModel.addRow(arrayOf(
                     worktree.path,
                     branchDisplay,
@@ -577,7 +577,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             for (line in lines) {
                 when {
                     line.startsWith("worktree ") -> {
-                        // 保存上一个 worktree
+                        // Save previous worktree
                         if (currentPath != null && currentCommit != null) {
                             worktrees.add(WorktreeInfo(
                                 path = currentPath,
@@ -586,7 +586,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                                 isLocked = isLocked
                             ))
                         }
-                        // 开始新的 worktree
+                        // Start new worktree
                         currentPath = line.substring(9).trim()
                         currentCommit = null
                         currentBranch = null
@@ -597,7 +597,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                     }
                     line.startsWith("branch ") -> {
                         currentBranch = line.substring(7).trim()
-                        // 移除 refs/heads/ 前缀
+                        // Remove refs/heads/ prefix
                         if (currentBranch.startsWith("refs/heads/")) {
                             currentBranch = currentBranch.substring(11)
                         }
@@ -608,7 +608,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 }
             }
             
-            // 添加最后一个 worktree
+            // Add last worktree
             if (currentPath != null && currentCommit != null) {
                 worktrees.add(WorktreeInfo(
                     path = currentPath,
@@ -618,7 +618,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 ))
             }
             
-            // 如果没有找到任何 worktree（porcelain 格式可能失败），尝试简单格式
+            // If no worktree found (porcelain format may fail), try simple format
             if (worktrees.isEmpty()) {
                 val simpleProcessBuilder = ProcessBuilder("git", "worktree", "list")
                 simpleProcessBuilder.directory(rootFile)
@@ -629,7 +629,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 
                 for (line in simpleLines) {
                     if (line.isNotBlank()) {
-                        // 解析格式: /path/to/worktree [branch] commit-hash
+                        // Parse format: /path/to/worktree [branch] commit-hash
                         val parts = line.trim().split("\\s+".toRegex())
                         if (parts.isNotEmpty()) {
                             val path = parts[0]
@@ -663,7 +663,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             }
             
         } catch (e: Exception) {
-            // 如果都失败了，至少显示主仓库
+            // If all failed, at least show main repository
             try {
                 worktrees.add(WorktreeInfo(
                     path = repository.root.path,
@@ -672,7 +672,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                     isLocked = false
                 ))
             } catch (e2: Exception) {
-                // 最后的错误处理
+                // Final error handling
                 e2.printStackTrace()
             }
         }
@@ -681,7 +681,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     }
 }
 
-// 分支选择对话框
+// Branch selection dialog
 private class BranchSelectionDialog(
     project: Project,
     private val allBranches: List<String>,
@@ -696,13 +696,13 @@ private class BranchSelectionDialog(
         private set
     
     init {
-        title = "选择分支"
+        title = "Select Branch"
         branchList.model = listModel
         branchList.selectionMode = ListSelectionModel.SINGLE_SELECTION
         filteredBranches.addAll(allBranches)
         updateListModel()
         
-        // 设置默认选中项
+        // Set default selected item
         if (defaultBranch != null && allBranches.contains(defaultBranch)) {
             val index = filteredBranches.indexOf(defaultBranch)
             if (index >= 0) {
@@ -713,7 +713,7 @@ private class BranchSelectionDialog(
             branchList.selectedIndex = 0
         }
         
-        // 搜索框监听器，实现实时过滤
+        // Search field listener for real-time filtering
         searchField.document.addDocumentListener(object : DocumentListener {
             override fun insertUpdate(e: DocumentEvent) {
                 filterBranches()
@@ -728,7 +728,7 @@ private class BranchSelectionDialog(
             }
         })
         
-        // 双击列表项确认选择
+        // Double-click list item to confirm selection
         branchList.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 if (e.clickCount == 2) {
@@ -737,12 +737,12 @@ private class BranchSelectionDialog(
             }
         })
         
-        // 回车键确认选择
+        // Enter key to confirm selection
         searchField.addActionListener {
             if (branchList.selectedIndex >= 0) {
                 doOKAction()
             } else if (searchField.text.isNotBlank()) {
-                // 如果输入了文本但没有选中项，使用输入的文本
+                // If text is entered but no item selected, use the input text
                 selectedBranch = searchField.text.trim()
                 close(OK_EXIT_CODE)
             }
@@ -770,7 +770,7 @@ private class BranchSelectionDialog(
         
         updateListModel()
         
-        // 如果有过滤结果，选中第一项
+        // If there are filtered results, select first item
         if (filteredBranches.isNotEmpty()) {
             branchList.selectedIndex = 0
         } else {
@@ -781,12 +781,12 @@ private class BranchSelectionDialog(
     override fun createCenterPanel(): JComponent {
         val panel = JBPanel<JBPanel<*>>(BorderLayout())
         
-        // 搜索框
+        // Search field
         val searchPanel = JBPanel<JBPanel<*>>(BorderLayout())
-        searchPanel.add(JBLabel("搜索分支:"), BorderLayout.WEST)
+        searchPanel.add(JBLabel("Search Branch:"), BorderLayout.WEST)
         searchPanel.add(searchField, BorderLayout.CENTER)
         
-        // 分支列表
+        // Branch list
         val scrollPane = JBScrollPane(branchList)
         scrollPane.preferredSize = java.awt.Dimension(400, 300)
         
@@ -801,7 +801,7 @@ private class BranchSelectionDialog(
         if (selectedIndex >= 0 && selectedIndex < filteredBranches.size) {
             selectedBranch = filteredBranches[selectedIndex]
         } else if (searchField.text.isNotBlank()) {
-            // 如果输入了文本但没有选中项，使用输入的文本
+            // If text is entered but no item selected, use the input text
             selectedBranch = searchField.text.trim()
         }
         

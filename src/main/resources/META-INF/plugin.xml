@@ -44,6 +44,12 @@
     
     <!-- Change notes displayed in the IDE and on the plugin page -->
     <change-notes><![CDATA[
+        <h2>Version 1.0.1</h2>
+        <ul>
+            <li>🐛 Fixed: Changed all UI text to English for international users</li>
+            <li>🎨 Improved: Standardized language across the entire interface</li>
+        </ul>
+        
         <h2>Version 1.0.0</h2>
         <ul>
             <li><b>Initial Release</b></li>
