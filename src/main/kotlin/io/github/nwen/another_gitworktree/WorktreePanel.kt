@@ -1,6 +1,11 @@
 package io.github.nwen.another_gitworktree
 
+import com.intellij.ide.impl.ProjectUtil
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
@@ -10,6 +15,8 @@ import git4idea.repo.GitRepositoryManager
 import java.awt.BorderLayout
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import javax.swing.JButton
@@ -26,6 +33,7 @@ data class WorktreeInfo(
 class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(BorderLayout()) {
     private val tableModel = DefaultTableModel()
     private val table: JTable
+    private val worktreeList = mutableListOf<WorktreeInfo>()
 
     init {
         // 创建表格
@@ -37,6 +45,18 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         table = JBTable(tableModel).apply {
             setShowGrid(true)
             autoResizeMode = JTable.AUTO_RESIZE_ALL_COLUMNS
+            
+            // 添加双击事件监听器
+            addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent) {
+                    if (e.clickCount == 2) {
+                        val selectedRow = rowAtPoint(e.point)
+                        if (selectedRow >= 0 && selectedRow < worktreeList.size) {
+                            openWorktreeDirectory(worktreeList[selectedRow])
+                        }
+                    }
+                }
+            })
         }
         
         // 添加刷新按钮和标签
@@ -60,8 +80,77 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         refreshWorktrees()
     }
     
+    private fun openWorktreeDirectory(worktree: WorktreeInfo) {
+        try {
+            val worktreePath = worktree.path
+            val worktreeFile = java.io.File(worktreePath)
+            
+            if (!worktreeFile.exists()) {
+                Messages.showErrorDialog(
+                    project,
+                    "目录不存在: $worktreePath",
+                    "打开 Worktree 失败"
+                )
+                return
+            }
+            
+            if (!worktreeFile.isDirectory) {
+                Messages.showErrorDialog(
+                    project,
+                    "路径不是目录: $worktreePath",
+                    "打开 Worktree 失败"
+                )
+                return
+            }
+            
+            // 在 IDEA 中打开目录作为项目
+            ApplicationManager.getApplication().invokeLater {
+                val projectDir = java.io.File(worktreePath)
+                
+                if (!projectDir.exists() || !projectDir.isDirectory) {
+                    Messages.showErrorDialog(
+                        project,
+                        "目录不存在或不是有效目录: $worktreePath",
+                        "打开 Worktree 失败"
+                    )
+                    return@invokeLater
+                }
+                
+                try {
+                    // 使用 ProjectUtil 打开或导入项目
+                    // 这会自动处理项目打开逻辑
+                    val virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(projectDir)
+                    if (virtualFile != null) {
+                        ProjectUtil.openOrImport(worktreePath, null, true)
+                    } else {
+                        Messages.showErrorDialog(
+                            project,
+                            "无法访问目录: $worktreePath",
+                            "打开 Worktree 失败"
+                        )
+                    }
+                } catch (e: Exception) {
+                    Messages.showErrorDialog(
+                        project,
+                        "打开目录时出错: ${e.message}",
+                        "打开 Worktree 失败"
+                    )
+                    e.printStackTrace()
+                }
+            }
+        } catch (e: Exception) {
+            Messages.showErrorDialog(
+                project,
+                "打开目录时出错: ${e.message}",
+                "打开 Worktree 失败"
+            )
+            e.printStackTrace()
+        }
+    }
+    
     private fun refreshWorktrees() {
         tableModel.rowCount = 0
+        worktreeList.clear()
         
         val repositoryManager = GitRepositoryManager.getInstance(project)
         val repositories = repositoryManager.repositories
@@ -78,6 +167,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         if (worktrees.isEmpty()) {
             tableModel.addRow(arrayOf("", "没有找到 worktree", "", ""))
         } else {
+            worktreeList.addAll(worktrees)
             worktrees.forEach { worktree ->
                 val branchDisplay = worktree.branch ?: "(detached HEAD)"
                 val statusDisplay = if (worktree.isLocked) "已锁定" else "正常"
