@@ -44,6 +44,12 @@
     
     <!-- Change notes displayed in the IDE and on the plugin page -->
     <change-notes><![CDATA[
+        <h2>Version 1.0.3</h2>
+        <ul>
+            <li>🎨 New: Custom plugin icon designed specifically for Git worktree concept</li>
+            <li>🎨 Improved: Added dark theme support for plugin icon</li>
+        </ul>
+        
         <h2>Version 1.0.2</h2>
         <ul>
             <li>✨ New: Extended compatibility to IDEA 2023.3+ (no upper limit)</li>
