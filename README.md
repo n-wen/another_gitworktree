@@ -51,7 +51,15 @@ A Git Worktree management plugin for IntelliJ IDEA that provides a visual interf
 
 ## Installation
 
-### Option 1: Download from GitHub Releases (Recommended)
+### Option 1: Install from JetBrains Marketplace (Recommended)
+
+1. Open IntelliJ IDEA
+2. Go to **File** → **Settings** → **Plugins** (or **IntelliJ IDEA** → **Preferences** → **Plugins** on macOS)
+3. Click **Marketplace** tab
+4. Search for "Another Git Worktree"
+5. Click **Install** and restart IDEA
+
+### Option 2: Download from GitHub Releases
 
 1. Go to [Releases](https://github.com/n-wen/another_gitworktree/releases)
 2. Download the latest `another_gitworktree-*.zip` file
@@ -62,7 +70,7 @@ A Git Worktree management plugin for IntelliJ IDEA that provides a visual interf
    - Select the downloaded zip file
    - Click **OK** and restart IDEA
 
-### Option 2: Build from Source
+### Option 3: Build from Source
 
 1. Clone the repository:
 ```bash
@@ -79,10 +87,6 @@ cd another_gitworktree
    - Open IntelliJ IDEA
    - Go to **File** → **Settings** → **Plugins** → ⚙️ → **Install Plugin from Disk...**
    - Select `build/distributions/another_gitworktree-*.zip`
-
-### Option 3: From JetBrains Marketplace (Coming Soon)
-
-Search for "Another Git Worktree" in the plugin marketplace.
 
 ## Usage
 

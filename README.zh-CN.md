@@ -51,7 +51,15 @@
 
 ## 安装
 
-### 方式一：从 GitHub Releases 下载（推荐）
+### 方式一：从 JetBrains Marketplace 安装（推荐）
+
+1. 打开 IntelliJ IDEA
+2. 进入 **File** → **Settings** → **Plugins**（macOS 上为 **IntelliJ IDEA** → **Preferences** → **Plugins**）
+3. 点击 **Marketplace** 标签页
+4. 搜索 "Another Git Worktree"
+5. 点击 **Install** 并重启 IDEA
+
+### 方式二：从 GitHub Releases 下载
 
 1. 访问 [Releases 页面](https://github.com/n-wen/another_gitworktree/releases)
 2. 下载最新的 `another_gitworktree-*.zip` 文件
@@ -62,7 +70,7 @@
    - 选择下载的 zip 文件
    - 点击 **OK** 并重启 IDEA
 
-### 方式二：从源码构建
+### 方式三：从源码构建
 
 1. 克隆仓库：
 ```bash
@@ -79,10 +87,6 @@ cd another_gitworktree
    - 打开 IntelliJ IDEA
    - 进入 **File** → **Settings** → **Plugins** → ⚙️ → **Install Plugin from Disk...**
    - 选择 `build/distributions/another_gitworktree-*.zip`
-
-### 方式三：从 JetBrains Marketplace 安装（即将推出）
-
-在插件市场中搜索 "Another Git Worktree"。
 
 ## 使用方法
 
