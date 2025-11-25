@@ -737,8 +737,37 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 worktreeDir.deleteRecursively()
             }
             
+            var branchToUse = branch
+            
+            // Handle remote branches
+            if (branch.contains("/")) {
+                // Extract remote name and branch name
+                val remoteParts = branch.split("/")
+                if (remoteParts.size >= 2) {
+                    val remoteName = remoteParts[0]
+                    val remoteBranchName = remoteParts.subList(1, remoteParts.size).joinToString("/")
+                    
+                    // Check if local branch already exists
+                    val localBranchExists = isValidBranchName(remoteBranchName, repository)
+                    
+                    if (!localBranchExists) {
+                        // Create local branch tracking the remote branch
+                        val createBranchProcessBuilder = ProcessBuilder(
+                            "git", "branch", "--track", remoteBranchName, "$remoteName/$remoteBranchName"
+                        )
+                        createBranchProcessBuilder.directory(rootFile)
+                        val createBranchProcess = createBranchProcessBuilder.start()
+                        val createBranchExitCode = createBranchProcess.waitFor()
+                        
+                        if (createBranchExitCode == 0) {
+                            branchToUse = remoteBranchName
+                        }
+                    }
+                }
+            }
+            
             // Execute git worktree add command
-            val processBuilder = ProcessBuilder("git", "worktree", "add", worktreePath, branch)
+            val processBuilder = ProcessBuilder("git", "worktree", "add", worktreePath, branchToUse)
             processBuilder.directory(rootFile)
             val process = processBuilder.start()
             
