@@ -36,7 +36,12 @@ intellijPlatform {
         }
 
         changeNotes = """
-            Initial version
+            ### v1.0.5
+            - ✨ Improved branch selection logic for remote branches
+            - 🔄 Optimized branch validation by removing unnecessary remote branch checks
+            - 🧹 Cleaned up branch names by removing special characters (*, +)
+            - 📝 Simplified branch handling in worktree creation process
+            - 🎯 Enhanced user experience when selecting remote branches
         """.trimIndent()
     }
 }

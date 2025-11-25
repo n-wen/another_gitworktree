@@ -176,7 +176,14 @@ Issues and Pull Requests are welcome!
 
 ## Changelog
 
-### v1.0.2 (Latest)
+### v1.0.5 (Latest)
+- ✨ Improved branch selection logic for remote branches
+- 🔄 Optimized branch validation by removing unnecessary remote branch checks
+- 🧹 Cleaned up branch names by removing special characters (*, +)
+- 📝 Simplified branch handling in worktree creation process
+- 🎯 Enhanced user experience when selecting remote branches
+
+### v1.0.2
 - ✨ Extended compatibility to IDEA 2023.3+ (no upper limit)
 - 🛡️ Fixed: Main worktree can no longer be deleted (button disabled, menu item disabled)
 - 🔄 Improved: Auto-close open projects before deleting their worktree
