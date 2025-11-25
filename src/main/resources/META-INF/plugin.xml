@@ -44,6 +44,15 @@
     
     <!-- Change notes displayed in the IDE and on the plugin page -->
     <change-notes><![CDATA[
+        <h2>Version 1.0.5</h2>
+        <ul>
+            <li>✨ Improved: Enhanced branch selection logic for remote branches</li>
+            <li>🔄 Optimized: Removed unnecessary remote branch checks in branch validation</li>
+            <li>🧹 Cleaned: Removed special characters (*, +) from branch names</li>
+            <li>📝 Simplified: Branch handling in worktree creation process</li>
+            <li>🎯 Enhanced: User experience when selecting remote branches</li>
+        </ul>
+        
         <h2>Version 1.0.4</h2>
         <ul>
             <li>🔧 Improved: Enhanced refresh mechanism for better Git repository detection</li>
