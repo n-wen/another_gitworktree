@@ -15,14 +15,14 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.table.JBTable
+import git4idea.repo.GitRepository
+import git4idea.repo.GitRepositoryManager
 import javax.swing.DefaultListModel
 import javax.swing.JComponent
 import javax.swing.JList
 import javax.swing.ListSelectionModel
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
-import git4idea.repo.GitRepository
-import git4idea.repo.GitRepositoryManager
 import java.awt.BorderLayout
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
@@ -57,6 +57,16 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
     private val table: JTable
     private val worktreeList = mutableListOf<WorktreeInfo>()
     private lateinit var deleteButton: JButton
+    
+    // Throttling to prevent excessive operations
+    private var lastRefreshTime = 0L
+    private var lastCreateTime = 0L
+    private var lastDeleteTime = 0L
+    private val OPERATION_THROTTLE_MS = 1000L // 1 second throttle
+    
+    // Background refresh mechanism
+    private val backgroundRefreshDelay = 5000L // 5 seconds
+    private var backgroundRefreshScheduled = false
 
     init {
         // Create table
@@ -110,6 +120,11 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         val createButton = JButton("Create").apply {
             addActionListener(object : ActionListener {
                 override fun actionPerformed(e: ActionEvent?) {
+                    if (isOperationThrottled("create", lastCreateTime)) {
+                        Messages.showMessageDialog(project, "Please wait a moment before creating another worktree.", "Operation Throttled", Messages.getInformationIcon())
+                        return
+                    }
+                    lastCreateTime = System.currentTimeMillis()
                     createWorktree()
                 }
             })
@@ -117,6 +132,11 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         deleteButton = JButton("Delete").apply {
             addActionListener(object : ActionListener {
                 override fun actionPerformed(e: ActionEvent?) {
+                    if (isOperationThrottled("delete", lastDeleteTime)) {
+                        Messages.showMessageDialog(project, "Please wait a moment before deleting another worktree.", "Operation Throttled", Messages.getInformationIcon())
+                        return
+                    }
+                    lastDeleteTime = System.currentTimeMillis()
                     deleteSelectedWorktree()
                 }
             })
@@ -124,6 +144,10 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         val refreshButton = JButton("Refresh").apply {
             addActionListener(object : ActionListener {
                 override fun actionPerformed(e: ActionEvent?) {
+                    if (isOperationThrottled("refresh", lastRefreshTime)) {
+                        return // Silent throttle
+                    }
+                    lastRefreshTime = System.currentTimeMillis()
                     refreshWorktrees()
                 }
             })
@@ -144,6 +168,9 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         
         // Use invokeLater with multiple retries to ensure Git repository is ready
         scheduleRefresh(0)
+        
+        // Schedule background refresh every 5 seconds if needed
+        scheduleBackgroundRefresh()
     }
     
     private fun showLoading() {
@@ -156,10 +183,10 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             val repositoryManager = GitRepositoryManager.getInstance(project)
             val repositories = repositoryManager.repositories
             
-            if (repositories.isEmpty() && attemptCount < 10) {
-                // Repository not ready yet, retry after delay
+            if (repositories.isEmpty() && attemptCount < 5) {
+                // Repository not ready yet, retry after delay - limited retries
                 ApplicationManager.getApplication().executeOnPooledThread {
-                    Thread.sleep(200) // Wait 200ms
+                    Thread.sleep(300) // Wait 300ms
                     scheduleRefresh(attemptCount + 1)
                 }
             } else {
@@ -179,6 +206,37 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         }
     }
     
+    /**
+     * Check if an operation should be throttled based on the last execution time
+     */
+    private fun isOperationThrottled(operationType: String, lastExecutionTime: Long): Boolean {
+        val currentTime = System.currentTimeMillis()
+        val timeSinceLastExecution = currentTime - lastExecutionTime
+        return timeSinceLastExecution < OPERATION_THROTTLE_MS
+    }
+    
+    /**
+     * Schedule background refresh with delay to prevent excessive operations
+     */
+    private fun scheduleBackgroundRefresh() {
+        if (backgroundRefreshScheduled) return
+        
+        backgroundRefreshScheduled = true
+        ApplicationManager.getApplication().executeOnPooledThread {
+            Thread.sleep(backgroundRefreshDelay)
+            
+            ApplicationManager.getApplication().invokeLater {
+                backgroundRefreshScheduled = false
+                // Only refresh if needed (e.g., after operations)
+                refreshWorktrees()
+            }
+        }
+    }
+    
+    /**
+     * Refresh the worktrees list from Git repository
+     * @param isBackgroundRefresh Whether this is a background refresh (silent)
+     */
     private fun showContextMenu(e: MouseEvent) {
         val selectedRow = table.rowAtPoint(e.point)
         if (selectedRow < 0 || selectedRow >= worktreeList.size) {
@@ -204,6 +262,54 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         popupMenu.add(deleteItem)
         
         popupMenu.show(table, e.x, e.y)
+    }
+    
+    fun refreshWorktrees() {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            try {
+                val repositoryManager = GitRepositoryManager.getInstance(project)
+                val repositories = repositoryManager.repositories
+                
+                if (repositories.isEmpty()) {
+                    ApplicationManager.getApplication().invokeLater {
+                        tableModel.rowCount = 0
+                        tableModel.addRow(arrayOf("", "Git repository not found", "", ""))
+                    }
+                    return@executeOnPooledThread
+                }
+                
+                // Use first repository (usually project has only one main repository)
+                val repository = repositories.first()
+                val worktrees = getWorktrees(repository)
+                
+                ApplicationManager.getApplication().invokeLater {
+                    tableModel.rowCount = 0
+                    worktreeList.clear()
+                    
+                    if (worktrees.isEmpty()) {
+                        tableModel.addRow(arrayOf("", "No worktrees found", "", ""))
+                    } else {
+                        worktreeList.addAll(worktrees)
+                        worktrees.forEach { worktree ->
+                            val branchDisplay = worktree.branch ?: "(detached HEAD)"
+                            val statusDisplay = if (worktree.isLocked) "Locked" else "Normal"
+                            tableModel.addRow(arrayOf(
+                                worktree.path,
+                                branchDisplay,
+                                worktree.commitHash.take(8),
+                                statusDisplay
+                            ))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                thisLogger().error("Error refreshing worktrees", e)
+                ApplicationManager.getApplication().invokeLater {
+                    tableModel.rowCount = 0
+                    tableModel.addRow(arrayOf("", "Error loading worktrees", "", ""))
+                }
+            }
+        }
     }
     
     private fun deleteSelectedWorktree() {
@@ -659,38 +765,7 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         }
     }
     
-    fun refreshWorktrees() {
-        tableModel.rowCount = 0
-        worktreeList.clear()
-        
-        val repositoryManager = GitRepositoryManager.getInstance(project)
-        val repositories = repositoryManager.repositories
-        
-        if (repositories.isEmpty()) {
-            tableModel.addRow(arrayOf("", "Git repository not found", "", ""))
-            return
-        }
-        
-        // Use first repository (usually project has only one main repository)
-        val repository = repositories.first()
-        val worktrees = getWorktrees(repository)
-        
-        if (worktrees.isEmpty()) {
-            tableModel.addRow(arrayOf("", "No worktrees found", "", ""))
-        } else {
-            worktreeList.addAll(worktrees)
-            worktrees.forEach { worktree ->
-                val branchDisplay = worktree.branch ?: "(detached HEAD)"
-                val statusDisplay = if (worktree.isLocked) "Locked" else "Normal"
-                tableModel.addRow(arrayOf(
-                    worktree.path,
-                    branchDisplay,
-                    worktree.commitHash.take(8),
-                    statusDisplay
-                ))
-            }
-        }
-    }
+    
     
     private fun getWorktrees(repository: GitRepository): List<WorktreeInfo> {
         val worktrees = mutableListOf<WorktreeInfo>()

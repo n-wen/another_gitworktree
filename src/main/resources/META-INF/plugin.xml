@@ -44,6 +44,13 @@
     
     <!-- Change notes displayed in the IDE and on the plugin page -->
     <change-notes><![CDATA[
+        <h2>Version 1.0.4</h2>
+        <ul>
+            <li>🔧 Improved: Enhanced refresh mechanism for better Git repository detection</li>
+            <li>🐛 Fixed: Removed unused isBackgroundRefresh parameter</li>
+            <li>🔄 Updated: Code cleanup and optimization</li>
+        </ul>
+        
         <h2>Version 1.0.3</h2>
         <ul>
             <li>🎨 New: Custom plugin icon designed specifically for Git worktree concept</li>
