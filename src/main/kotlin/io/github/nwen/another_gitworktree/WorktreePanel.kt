@@ -607,12 +607,6 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
             return
         }
         
-        // Validate if branch exists
-        if (!isValidBranchName(branch, repository)) {
-            Messages.showErrorDialog(project, "Branch '$branch' does not exist", "Create Worktree Failed")
-            return
-        }
-        
         // Show dialog for user to input worktree path
         val worktreePath = showCreateWorktreeDialog(branch)
         if (worktreePath == null || worktreePath.isBlank()) {
@@ -642,7 +636,80 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         // Use custom dialog to select branch
         val dialog = BranchSelectionDialog(project, branches, defaultBranch)
         if (dialog.showAndGet()) {
-            return dialog.selectedBranch
+            var selectedBranch = dialog.selectedBranch
+            if (selectedBranch != null) {
+                // Remove any leading whitespace
+                selectedBranch = selectedBranch.trim()
+                
+                // Check if branch starts with "remotes/"
+                if (selectedBranch.startsWith("remotes/")) {
+                    // Extract remote branch name (remove "remotes/" prefix)
+                    val remoteBranch = selectedBranch
+                    // Extract just the branch name without remote prefix
+                    // Format: remotes/origin/feature/branch1 -> feature/branch1
+                    val branchName = remoteBranch.substringAfter("remotes/").substringAfter("/")
+                    
+                    // Check if local branch exists
+                    val localBranchExists = branches.any { it.trim().equals(branchName, ignoreCase = true) }
+                    
+                    if (localBranchExists) {
+                        // Return local branch name
+                        return branchName
+                    } else {
+                        // Ask user if they want to create local branch
+                        val result = Messages.showYesNoDialog(
+                            project,
+                            "Local branch '$branchName' does not exist. Do you want to create it?",
+                            "Create Local Branch",
+                            Messages.getQuestionIcon()
+                        )
+                        
+                        if (result == Messages.YES) {
+                            // Create local branch tracking the remote branch
+                            try {
+                                val root = repository.root
+                                val rootFile = java.io.File(root.path)
+                                
+                                // Execute git branch command to create local branch tracking remote
+                                val processBuilder = ProcessBuilder(
+                                    "git", "branch", branchName, remoteBranch
+                                )
+                                processBuilder.directory(rootFile)
+                                val process = processBuilder.start()
+                                val exitCode = process.waitFor()
+                                
+                                if (exitCode != 0) {
+                                    // Read error output
+                                    val errorReader = BufferedReader(InputStreamReader(process.errorStream))
+                                    val errorLines = errorReader.readLines()
+                                    val errorMessage = errorLines.joinToString("\n")
+                                    
+                                    Messages.showErrorDialog(
+                                        project,
+                                        "Failed to create local branch: $errorMessage",
+                                        "Create Branch Failed"
+                                    )
+                                    return null
+                                }
+                            } catch (e: Exception) {
+                                Messages.showErrorDialog(
+                                    project,
+                                    "Error creating local branch: ${e.message}",
+                                    "Create Branch Failed"
+                                )
+                                return null
+                            }
+                            
+                            // Return the created branch name
+                            return branchName
+                        } else {
+                            // User cancelled, return null
+                            return null
+                        }
+                    }
+                }
+            }
+            return selectedBranch
         }
         return null
     }
@@ -652,49 +719,25 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         try {
             val root = repository.root
             val rootFile = java.io.File(root.path)
-            val processBuilder = ProcessBuilder("git", "branch", "-a", "--format=%(refname:short)")
+            val processBuilder = ProcessBuilder("git", "branch", "-a")
             processBuilder.directory(rootFile)
             val process = processBuilder.start()
             val reader = BufferedReader(InputStreamReader(process.inputStream))
             val lines = reader.readLines()
             process.waitFor()
-            branches.addAll(lines.filter { it.isNotBlank() && !it.equals("HEAD", ignoreCase = true) })
+            
+            branches.addAll(lines.filter { it.isNotBlank() && !it.equals("HEAD", ignoreCase = true) }
+                .map { line ->
+                    // Remove special characters like * (current branch) or + from the beginning
+                    line.trim()
+                        .replaceFirst(Regex("^[*+]\\s*"), "")
+                })
         } catch (e: Exception) {
             e.printStackTrace()
         }
         return branches
     }
     
-    private fun isValidBranchName(branchName: String, repository: GitRepository): Boolean {
-        // Check if branch name is valid (simple validation)
-        if (branchName.isBlank() || branchName.contains(" ")) {
-            return false
-        }
-        
-        // Can further validate if branch exists
-        try {
-            val root = repository.root
-            val rootFile = java.io.File(root.path)
-            
-            // Check for local branch first
-            val localProcessBuilder = ProcessBuilder("git", "show-ref", "--verify", "--quiet", "refs/heads/$branchName")
-            localProcessBuilder.directory(rootFile)
-            val localProcess = localProcessBuilder.start()
-            val localExitCode = localProcess.waitFor()
-            if (localExitCode == 0) {
-                return true
-            }
-            
-            // Check for remote branch
-            val remoteProcessBuilder = ProcessBuilder("git", "show-ref", "--verify", "--quiet", "refs/remotes/$branchName")
-            remoteProcessBuilder.directory(rootFile)
-            val remoteProcess = remoteProcessBuilder.start()
-            val remoteExitCode = remoteProcess.waitFor()
-            return remoteExitCode == 0
-        } catch (e: Exception) {
-            return false
-        }
-    }
     
     private fun showCreateWorktreeDialog(branch: String): String? {
         val defaultPath = suggestWorktreePath(branch)
@@ -737,34 +780,8 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
                 worktreeDir.deleteRecursively()
             }
             
-            var branchToUse = branch
-            
-            // Handle remote branches
-            if (branch.contains("/")) {
-                // Extract remote name and branch name
-                val remoteParts = branch.split("/")
-                if (remoteParts.size >= 2) {
-                    val remoteName = remoteParts[0]
-                    val remoteBranchName = remoteParts.subList(1, remoteParts.size).joinToString("/")
-                    
-                    // Check if local branch already exists
-                    val localBranchExists = isValidBranchName(remoteBranchName, repository)
-                    
-                    if (!localBranchExists) {
-                        // Create local branch tracking the remote branch
-                        val createBranchProcessBuilder = ProcessBuilder(
-                            "git", "branch", "--track", remoteBranchName, "$remoteName/$remoteBranchName"
-                        )
-                        createBranchProcessBuilder.directory(rootFile)
-                        val createBranchProcess = createBranchProcessBuilder.start()
-                        val createBranchExitCode = createBranchProcess.waitFor()
-                        
-                        if (createBranchExitCode == 0) {
-                            branchToUse = remoteBranchName
-                        }
-                    }
-                }
-            }
+            // branch is already a local branch, no need to handle remote branches
+            val branchToUse = branch
             
             // Execute git worktree add command
             val processBuilder = ProcessBuilder("git", "worktree", "add", worktreePath, branchToUse)
