@@ -652,13 +652,13 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         try {
             val root = repository.root
             val rootFile = java.io.File(root.path)
-            val processBuilder = ProcessBuilder("git", "branch", "--list", "--format=%(refname:short)")
+            val processBuilder = ProcessBuilder("git", "branch", "-a", "--format=%(refname:short)")
             processBuilder.directory(rootFile)
             val process = processBuilder.start()
             val reader = BufferedReader(InputStreamReader(process.inputStream))
             val lines = reader.readLines()
             process.waitFor()
-            branches.addAll(lines.filter { it.isNotBlank() })
+            branches.addAll(lines.filter { it.isNotBlank() && !it.equals("HEAD", ignoreCase = true) })
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -675,11 +675,22 @@ class WorktreePanel(private val project: Project) : JBPanel<WorktreePanel>(Borde
         try {
             val root = repository.root
             val rootFile = java.io.File(root.path)
-            val processBuilder = ProcessBuilder("git", "show-ref", "--verify", "--quiet", "refs/heads/$branchName")
-            processBuilder.directory(rootFile)
-            val process = processBuilder.start()
-            val exitCode = process.waitFor()
-            return exitCode == 0
+            
+            // Check for local branch first
+            val localProcessBuilder = ProcessBuilder("git", "show-ref", "--verify", "--quiet", "refs/heads/$branchName")
+            localProcessBuilder.directory(rootFile)
+            val localProcess = localProcessBuilder.start()
+            val localExitCode = localProcess.waitFor()
+            if (localExitCode == 0) {
+                return true
+            }
+            
+            // Check for remote branch
+            val remoteProcessBuilder = ProcessBuilder("git", "show-ref", "--verify", "--quiet", "refs/remotes/$branchName")
+            remoteProcessBuilder.directory(rootFile)
+            val remoteProcess = remoteProcessBuilder.start()
+            val remoteExitCode = remoteProcess.waitFor()
+            return remoteExitCode == 0
         } catch (e: Exception) {
             return false
         }
